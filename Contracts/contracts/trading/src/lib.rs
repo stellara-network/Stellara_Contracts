@@ -1,7 +1,14 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Symbol, IntoVal, Vec, Val};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Symbol, IntoVal, Vec, Val};
 use shared::fees::{FeeManager, FeeError};
 use shared::safe_call::{safe_invoke, errors as SafeCallErrors};
+use shared::errors::PAUSED;
+
+#[contracttype]
+pub enum DataKey {
+    Admin,
+    Paused,
+}
 
 #[contract]
 pub struct TradingContract;
@@ -40,6 +47,9 @@ impl TradingContract {
         reward_contract: Address,
         reward_amount: i128,
     ) -> Result<(), u32> {
+        if Self::is_paused(env.clone()) {
+            panic!("{}", PAUSED);
+        }
         trader.require_auth();
 
         // 1. Collect Fee (State Change 1)
@@ -63,6 +73,16 @@ impl TradingContract {
             Ok(_) => Ok(()),
             Err(code) => Err(code),
         }
+    }
+
+    pub fn set_pause(env: Env, paused: bool) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &paused);
+    }
+
+    pub fn is_paused(env: Env) -> bool {
+        env.storage().instance().get(&DataKey::Paused).unwrap_or(false)
     }
 }
 

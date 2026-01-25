@@ -1,6 +1,10 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, token};
 
+use shared::fees::{FeeManager, FeeError};
+use shared::safe_call::{safe_invoke, errors as SafeCallErrors};
+use shared::errors::PAUSED;
+
 #[contracttype]
 #[derive(Clone)]
 pub struct PoolInfo {
@@ -25,6 +29,7 @@ pub enum DataKey {
     StakingToken,
     RewardToken,
     Admin,
+    Paused,
 }
 
 const PRECISION: i128 = 1_000_000_000_000; // 1e12
@@ -48,6 +53,7 @@ impl LiquidityPool {
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::StakingToken, &staking_token);
         env.storage().instance().set(&DataKey::RewardToken, &reward_token);
+        env.storage().instance().set(&DataKey::Paused, &false);
 
         let pool_info = PoolInfo {
             total_staked: 0,
@@ -59,9 +65,6 @@ impl LiquidityPool {
     }
 
     pub fn deposit(env: Env, user: Address, amount: i128) {
-        user.require_auth();
-        if amount <= 0 {
-            panic!("Invalid amount");
         }
 
         Self::update_pool(&env);
@@ -96,6 +99,9 @@ impl LiquidityPool {
     }
 
     pub fn withdraw(env: Env, user: Address, amount: i128) {
+        if Self::is_paused(env.clone()) {
+            panic!("{}", PAUSED);
+        }
         user.require_auth();
         if amount <= 0 {
             panic!("Invalid amount");
@@ -185,6 +191,16 @@ impl LiquidityPool {
             amount: 0,
             reward_debt: 0,
         })
+    }
+
+    pub fn set_pause(env: Env, paused: bool) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &paused);
+    }
+
+    pub fn is_paused(env: Env) -> bool {
+        env.storage().instance().get(&DataKey::Paused).unwrap_or(false)
     }
 }
 
