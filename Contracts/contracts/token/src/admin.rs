@@ -1,7 +1,8 @@
-use soroban_sdk::{Env, Address};
-use crate::storage::get_admin;
+use soroban_sdk::Env;
+
+use crate::storage::admin;
 
 pub fn require_admin(env: &Env) {
-    let admin = get_admin(env);
-    admin.require_auth();
+    let current_admin = admin(env);
+    current_admin.require_auth();
 }
