@@ -30,6 +30,7 @@ import { UnbindWalletDto } from '../dto/unbind-wallet.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RateLimitGuard, RateLimit } from '../guards/rate-limit.guard';
 import { ConfigService } from '@nestjs/config';
+import { AuditService } from '../../audit/audit.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -41,6 +42,7 @@ export class AuthController {
     private readonly jwtAuthService: JwtAuthService,
     private readonly apiTokenService: ApiTokenService,
     private readonly configService: ConfigService,
+    private readonly auditService: AuditService, 
   ) {}
 
   @Post('nonce')
@@ -116,9 +118,22 @@ export class AuthController {
     // Find or create user
     let user = await this.walletService.findUserByWallet(dto.publicKey);
 
+    // if (!user) {
+    //   user = await this.walletService.createUserWithWallet(dto.publicKey);
+    // }
+
+    let isNewUser = false;
+
     if (!user) {
-      user = await this.walletService.createUserWithWallet(dto.publicKey);
-    }
+     user = await this.walletService.createUserWithWallet(dto.publicKey);
+     isNewUser = true;
+  }
+
+     if (isNewUser) {await this.auditService.logAction(  'USER_CREATED',  user.id,  user.id,
+      { wallet: dto.publicKey }
+    );
+}
+
 
     // Update wallet last used
     await this.walletService.updateLastUsed(dto.publicKey);

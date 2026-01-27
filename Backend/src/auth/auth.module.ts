@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 
+
 // Entities
 import { User } from './entities/user.entity';
 import { WalletBinding } from './entities/wallet-binding.entity';
@@ -57,6 +58,7 @@ import { RedisModule } from '../redis/redis.module';
     ConfigModule,
     RedisModule,
     ScheduleModule.forRoot(),
+  
   ],
   controllers: [AuthController],
   providers: [

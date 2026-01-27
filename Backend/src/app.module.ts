@@ -23,6 +23,9 @@ import { WalletBinding } from './auth/entities/wallet-binding.entity';
 import { LoginNonce } from './auth/entities/login-nonce.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
 import { ApiToken } from './auth/entities/api-token.entity';
+import { AuditModule } from './audit/audit.module';
+import { AuditLog } from './audit/audit.entity';
+
 
 @Module({
   imports: [
@@ -49,6 +52,7 @@ import { ApiToken } from './auth/entities/api-token.entity';
           LoginNonce,
           RefreshToken,
           ApiToken,
+          AuditLog, 
         ],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
@@ -62,6 +66,7 @@ import { ApiToken } from './auth/entities/api-token.entity';
     StellarMonitorModule,
     WorkflowModule,
     QueueModule,
+    AuditModule,
   ],
 
   controllers: [AppController],

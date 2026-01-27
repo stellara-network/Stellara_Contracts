@@ -6,6 +6,9 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { User } from '../entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { AuditService } from '../../audit/audit.service';
+import { AuditEvent } from '../../audit/audit.event';  
+
 
 export interface JwtPayload {
   sub: string; // user id
@@ -23,6 +26,8 @@ export class JwtAuthService {
     private readonly refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly auditService: AuditService,
+  
   ) {}
 
   async generateAccessToken(userId: string, walletId?: string): Promise<string> {
@@ -30,6 +35,7 @@ export class JwtAuthService {
       sub: userId,
       walletId,
     };
+
 
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '15m'),
@@ -50,6 +56,13 @@ export class JwtAuthService {
     });
 
     const saved = await this.refreshTokenRepository.save(refreshToken);
+
+    // Get user details for audit event
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    
+    // Log refresh token creation
+    await this.auditService.logAction('REFRESH_TOKEN_CREATED', userId, saved.id, { expiresAt: saved.expiresAt });
+    
 
     return {
       token: saved.token,
@@ -96,6 +109,9 @@ export class JwtAuthService {
     const accessToken = await this.generateAccessToken(tokenRecord.userId);
     const newRefreshTokenData = await this.generateRefreshToken(tokenRecord.userId);
 
+    await this.auditService.logAction( 'ACCESS_TOKEN_REFRESHED', tokenRecord.userId, tokenRecord.id
+);
+
     return {
       accessToken,
       newRefreshToken: newRefreshTokenData.token,
@@ -109,7 +125,12 @@ export class JwtAuthService {
         revoked: true,
         revokedAt: new Date(),
       },
+
     );
+
+    await this.auditService.logAction('REFRESH_TOKEN_REVOKED', tokenId, tokenId
+);
+
   }
 
   async revokeAllUserRefreshTokens(userId: string): Promise<void> {
