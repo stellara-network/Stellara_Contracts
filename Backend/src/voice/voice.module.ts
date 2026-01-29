@@ -8,9 +8,14 @@ import { LlmService } from './services/llm.service';
 import { QuotaService } from './services/quota.service';
 import { LlmCacheService } from './services/llm-cache.service';
 import { RedisModule } from '../redis/redis.module';
+import { VoiceJob } from './entities/voice-job.entity';
 
 @Module({
-  imports: [RedisModule],
+  imports: [RedisModule, TypeOrmModule.forFeature([VoiceJob]),
+  BullModule.registerQueue({
+    name: 'voice-processing',
+  }),
+],
   providers: [
     VoiceGateway,
     VoiceSessionService,

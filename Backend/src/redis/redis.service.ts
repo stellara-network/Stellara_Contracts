@@ -9,6 +9,13 @@ export class RedisService
   public pubClient: RedisClientType;
   public subClient: RedisClientType;
 
+   constructor() {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    });
+  }
+
   async onModuleInit() {
     const url = process.env.REDIS_URL || 'redis://localhost:6379';
 

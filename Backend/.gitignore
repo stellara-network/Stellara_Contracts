@@ -37,10 +37,29 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
+.env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.local
+.env.backup
+.env.bak
+.env.backup.*
+
+# Secrets and sensitive files
+.vault/
+vault-data/
+*.pem
+*.key
+*.pub
+*.pfx
+*.p12
+secrets.json
+credentials.json
+service-account-key.json
+
+# Secret scanning
+.secrets.baseline
 
 # temp directory
 .temp

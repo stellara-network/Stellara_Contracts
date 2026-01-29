@@ -1,4 +1,5 @@
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, symbol_short};
+#![no_std]
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Symbol, symbol_short, Vec};
 
 /// Vesting schedule for an academy reward
 #[contracttype]
@@ -18,20 +19,24 @@ pub struct VestingSchedule {
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct GrantEvent {
+    pub grant_id: u64,
     pub beneficiary: Address,
     pub amount: i128,
-    pub vesting_id: u64,
-    pub timestamp: u64,
+    pub start_time: u64,
+    pub cliff: u64,
+    pub duration: u64,
+    pub granted_at: u64,
+    pub granted_by: Address,
 }
 
 /// Claim event for off-chain indexing
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct ClaimEvent {
+    pub grant_id: u64,
     pub beneficiary: Address,
     pub amount: i128,
-    pub vesting_id: u64,
-    pub timestamp: u64,
+    pub claimed_at: u64,
 }
 
 /// Revoke event for off-chain indexing
@@ -44,7 +49,7 @@ pub struct RevokeEvent {
     pub revoked_by: Address,
 }
 
-#[contracterror]
+/// Vesting error codes
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum VestingError {
@@ -159,7 +164,7 @@ impl AcademyVestingContract {
             .storage()
             .persistent()
             .get(&schedules_key)
-            .unwrap_or_else(|| soroban_sdk::Map::new(&env));
+            .unwrap_or_else(|_| soroban_sdk::Map::new(&env));
 
         schedules.set(next_id, schedule);
         env.storage().persistent().set(&schedules_key, &schedules);
@@ -171,10 +176,14 @@ impl AcademyVestingContract {
 
         // Emit grant event
         let grant_event = GrantEvent {
+            grant_id: next_id,
             beneficiary,
             amount,
-            vesting_id: next_id,
-            timestamp: env.ledger().timestamp(),
+            start_time,
+            cliff,
+            duration,
+            granted_at: env.ledger().timestamp(),
+            granted_by: admin,
         };
 
         env.events().publish((symbol_short!("grant"),), grant_event);
@@ -253,10 +262,10 @@ impl AcademyVestingContract {
 
         // Emit claim event
         let claim_event = ClaimEvent {
+            grant_id,
             beneficiary,
             amount: vested_amount,
-            vesting_id: grant_id,
-            timestamp: env.ledger().timestamp(),
+            claimed_at: env.ledger().timestamp(),
         };
 
         env.events().publish((symbol_short!("claim"),), claim_event);
@@ -397,7 +406,6 @@ impl AcademyVestingContract {
         }
 
         // Use fixed-point arithmetic to avoid floating point
-        // Using u128 for intermediate calculation to prevent overflow
         let vested_amount = (schedule.amount as u128 * vested_duration as u128)
             / remaining_duration as u128;
 

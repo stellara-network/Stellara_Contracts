@@ -1,0 +1,16 @@
+[package]
+name = "academy-rewards"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "=20.5.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "=20.5.0", features = ["testutils"] }
+
+
