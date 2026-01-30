@@ -1,0 +1,63 @@
+name: Secure Contract Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network to deploy to (testnet/mainnet)'
+        required: true
+        default: 'testnet'
+  push:
+    branches:
+      - main
+    paths:
+      - 'Contracts/**'
+
+jobs:
+  deploy:
+    name: Deploy Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Contracts
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Install Stellar CLI
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://install.stellar.org | sh
+          # Ensure stellar is in PATH (it might be in ~/.cargo/bin or /usr/local/bin)
+          if [ -d "$HOME/.cargo/bin" ]; then
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+
+      - name: Verify Environment
+        run: |
+          rustc --version
+          cargo --version
+          stellar version
+
+      - name: Deploy Contracts
+        env:
+          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_DEPLOYER_SECRET_KEY }}
+          STELLAR_NETWORK: ${{ github.event.inputs.network || 'testnet' }}
+          STELLAR_RPC_URL: ${{ secrets.STELLAR_RPC_URL }} # Optional, script defaults to testnet URL if not set
+        run: |
+          chmod +x scripts/deploy.sh
+          ./scripts/deploy.sh
+
+      - name: Upload Deployment Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployed-contracts
+          path: Contracts/deployed_contracts.env
