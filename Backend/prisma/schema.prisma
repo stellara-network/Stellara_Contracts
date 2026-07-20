@@ -557,3 +557,81 @@ enum TenantRole {
   ADMIN
   MEMBER
 }
+
+// Webhook Consumer Management Models
+model WebhookConsumer {
+  id           String                @id @default(cuid())
+  name         String                // Human-readable name for the consumer
+  url          String                // Webhook endpoint URL
+  secret       String?               // Optional webhook secret for HMAC verification
+  active       Boolean               @default(true)
+  maxRetries   Int                   @default(3) @map("max_retries")
+  retryDelayMs Int                   @default(5000) @map("retry_delay_ms") // Delay between retries
+  timeout      Int                   @default(30000) // Request timeout in milliseconds
+  
+  // Event filtering
+  eventTypes   String[]              @map("event_types") // Array of event types this consumer wants
+  contractIds  String[]              @map("contract_ids") // Array of contract IDs to filter by
+  
+  // Metadata
+  description  String?
+  tags         Json?                 // Optional tags for organization
+  
+  // Timestamps
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+  lastHealthy  DateTime?             @map("last_healthy") // Last successful delivery
+  
+  // Relations
+  deliveries   WebhookEventDelivery[]
+  
+  @@index([active])
+  @@index([eventTypes])
+  @@index([contractIds])
+  @@map("webhook_consumers")
+}
+
+model WebhookEventDelivery {
+  id             String                    @id @default(cuid())
+  consumerId     String                    @map("consumer_id")
+  consumer       WebhookConsumer           @relation(fields: [consumerId], references: [id], onDelete: Cascade)
+  
+  // Event information
+  eventId        String                    @map("event_id") // Reference to the event being delivered
+  eventType      String                    @map("event_type")
+  contractId     String                    @map("contract_id")
+  transactionHash String                   @map("transaction_hash")
+  eventData      Json                      @map("event_data") // The event payload
+  
+  // Delivery tracking
+  status         WebhookDeliveryStatus     @default(PENDING)
+  attempts       Int                       @default(0)
+  lastAttemptAt  DateTime?                 @map("last_attempt_at")
+  lastError      String?                   @map("last_error")
+  
+  // Response tracking
+  responseStatus Int?                      @map("response_status") // HTTP status code
+  responseTime   Int?                      @map("response_time_ms") // Response time in ms
+  responseBody   String?                   @map("response_body") // Response body (truncated)
+  
+  // Timestamps
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+  deliveredAt    DateTime?                 @map("delivered_at") // When successfully delivered
+  
+  @@unique([eventId, consumerId]) // One delivery record per event per consumer
+  @@index([consumerId, status])
+  @@index([consumerId, createdAt])
+  @@index([eventId])
+  @@index([status, attempts])
+  @@index([lastAttemptAt])
+  @@map("webhook_event_deliveries")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING     // Not yet attempted
+  DELIVERED   // Successfully delivered
+  FAILED      // Failed after max retries
+  RETRYING    // Currently retrying
+  DISABLED    // Consumer is disabled, skip delivery
+}

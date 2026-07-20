@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventListenerService, SorobanEvent } from '../events/event-listener.service';
 import { StorageService } from '../storage/storage.service';
+import { EventStorageService } from '../../webhook/event-storage.service';
 import { IndexedEvent } from '../entities/indexed-event.entity';
 
 export interface ProcessingResult {
@@ -29,6 +30,7 @@ export class EventProcessorService {
   constructor(
     private eventListener: EventListenerService,
     private storage: StorageService,
+    private eventStorageService: EventStorageService,
   ) {
     this.setupEventListeners();
     this.initializeTransformers();
@@ -104,16 +106,29 @@ export class EventProcessorService {
         // Transform event data
         const transformedData = await this.transformEvent(event);
         
-        // Store in database
+        // Store in database using legacy storage service
         const indexedEvent = await this.storage.storeEvent({
           ...event,
           eventData: transformedData,
           processedAt: new Date(),
         });
 
+        // Store event and create webhook deliveries
+        const stellarEvent = {
+          id: event.id,
+          eventType: this.extractEventName(event),
+          contractId: event.contractId,
+          transactionHash: event.transactionHash,
+          eventData: transformedData,
+          ledgerSeq: event.ledger,
+          timestamp: new Date(event.timestamp),
+        };
+
+        await this.eventStorageService.storeEvent(stellarEvent);
+
         const processingTime = Date.now() - startTime;
         this.logger.debug(
-          `Processed event ${event.transactionHash} in ${processingTime}ms`
+          `Processed event ${event.transactionHash} in ${processingTime}ms with webhook delivery setup`
         );
 
         return {

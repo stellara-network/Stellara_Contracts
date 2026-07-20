@@ -9,6 +9,8 @@ import { HealthCheckService } from './health/health-check.service';
 import { LedgerTrackerService } from './services/ledger-tracker.service';
 import { EventHandlerService } from './services/event-handler.service';
 import { DatabaseModule } from '../database.module';
+import { WebhookDeliveryService } from '../webhook/webhook-delivery.service';
+import { EventStorageService } from '../webhook/event-storage.service';
 import stellarConfig, { indexerConfig } from '../config/stellar.config';
 
 /**
@@ -38,6 +40,9 @@ import stellarConfig, { indexerConfig } from '../config/stellar.config';
     // Ledger state tracking
     LedgerTrackerService,
     EventHandlerService,
+    // Webhook services
+    WebhookDeliveryService,
+    EventStorageService,
   ],
   exports: [
     // Export services for potential external use
@@ -48,6 +53,8 @@ import stellarConfig, { indexerConfig } from '../config/stellar.config';
     HealthCheckService,
     LedgerTrackerService,
     EventHandlerService,
+    WebhookDeliveryService,
+    EventStorageService,
   ],
 })
 export class IndexerModule {}

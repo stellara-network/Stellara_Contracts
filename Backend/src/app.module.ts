@@ -10,6 +10,7 @@ import { IndexerModule } from './indexer/indexer.module';
 import { NotificationModule } from './notification/notification.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './tenant/tenant.module';
+import { WebhookModule } from './webhook/webhook.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nestjs/throttler-storage-redis';
 
@@ -38,6 +39,7 @@ import { ThrottlerStorageRedisService } from '@nestjs/throttler-storage-redis';
     NotificationModule,
     AuthModule,
     TenantModule,
+    WebhookModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],
