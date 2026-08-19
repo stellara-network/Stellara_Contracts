@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import { VoiceJobStage } from '../types/voice-job-stage.enum';
+import type { VoiceFailureMetadata } from '../types/voice-errors';
 
 export enum JobStatus {
   PENDING = 'pending',
@@ -32,6 +34,18 @@ export class VoiceJob {
   @Column({ type: 'enum', enum: JobStatus, default: JobStatus.PENDING })
   status: JobStatus;
 
+  /** Fine-grained pipeline stage; the checkpoint used to resume safely. */
+  @Column({
+    type: 'enum',
+    enum: VoiceJobStage,
+    default: VoiceJobStage.QUEUED,
+  })
+  stage: VoiceJobStage;
+
+  /** Persisted progress (0-100). Never exceeds 100; failed jobs stay < 100. */
+  @Column({ type: 'int', default: 0 })
+  progress: number;
+
   @Column({ nullable: true })
   userId: string;
 
@@ -57,9 +71,15 @@ export class VoiceJob {
   @Column({ type: 'text', nullable: true })
   errorMessage: string;
 
+  /** Structured, safe failure metadata (code, category, retryable, …). */
+  @Column({ type: 'jsonb', nullable: true })
+  failure: VoiceFailureMetadata | null;
+
+  /** Number of processing attempts already consumed (1 + retries). */
   @Column({ type: 'int', default: 0 })
   retryCount: number;
 
+  /** Maximum number of processing attempts allowed (default 3). */
   @Column({ type: 'int', default: 3 })
   maxRetries: number;
 
@@ -74,5 +94,11 @@ export class VoiceJob {
   updatedAt: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  completedAt: Date;
+  startedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  failedAt: Date | null;
 }

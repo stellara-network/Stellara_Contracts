@@ -19,6 +19,14 @@ import { ObservabilityModule } from '../observability/observability.module';
 import { QueueJobTracingWrapper } from '../observability/middleware/queue-job-tracing.wrapper';
 import type { Queue } from 'bull';
 import { VoiceProcessor } from './voice.processor';
+import { VoiceProviderService } from './providers/voice-provider.service';
+
+/**
+ * Bull-level attempts for the voice queue. The persisted `maxRetries` budget is
+ * authoritative; this value is only an upper bound so Bull never gives up
+ * before the persisted decision has been made.
+ */
+const VOICE_QUEUE_ATTEMPTS = Number(process.env.VOICE_QUEUE_ATTEMPTS) || 5;
 
 @Module({
   imports: [
@@ -27,6 +35,15 @@ import { VoiceProcessor } from './voice.processor';
     TypeOrmModule.forFeature([VoiceSession, VoiceJob, AiUsageQuota]),
     BullModule.registerQueue({
       name: 'voice-processing',
+      defaultJobOptions: {
+        attempts: VOICE_QUEUE_ATTEMPTS,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
     }),
   ],
   providers: [
@@ -41,6 +58,7 @@ import { VoiceProcessor } from './voice.processor';
     JwtService,
     WsJwtAuthGuard,
     VoiceProcessor,
+    VoiceProviderService,
   ],
   exports: [
     VoiceSessionService,
@@ -54,10 +72,14 @@ import { VoiceProcessor } from './voice.processor';
 export class VoiceModule implements OnModuleInit {
   constructor(
     private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
-    @InjectQueue('voice-processing') private readonly voiceProcessingQueue: Queue,
+    @InjectQueue('voice-processing')
+    private readonly voiceProcessingQueue: Queue,
   ) {}
 
   async onModuleInit() {
-    this.queueJobTracingWrapper.wrapQueueMetrics(this.voiceProcessingQueue, 'voice-processing');
+    this.queueJobTracingWrapper.wrapQueueMetrics(
+      this.voiceProcessingQueue,
+      'voice-processing',
+    );
   }
 }

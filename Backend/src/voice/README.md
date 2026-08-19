@@ -322,6 +322,47 @@ Replace the mock AI response in `StreamingResponseService` with actual AI servic
 ### Analytics Integration
 Session data and conversation logs can be streamed to analytics services for learning progress tracking.
 
+## Job Processing, Progress & Recovery
+
+The STT/TTS REST pipeline (`POST /voice/stt/upload`, `POST /voice/tts/generate`,
+`GET /voice/job/:id`, `GET /voice/job/:id/result`, `POST /voice/job/:id/retry`)
+processes audio as a resumable, observable pipeline.
+
+### Job States & Stages
+
+A job has a coarse `status` (`pending`, `processing`, `completed`, `failed`)
+and a fine-grained `stage` that acts as the recovery checkpoint:
+
+- **STT** (`uploading` → `uploaded` → `queued` → `transcribing` →
+  `transcription_completed` → `completed`)
+- **TTS** (`queued` → `generating_tts` → `completed`)
+
+`progress` (0–100) advances only at stage boundaries. It never exceeds 100 and
+never reports 100 before `completed`; a failed job retains the last meaningful
+progress value.
+
+### Failure Metadata
+
+Failures are persisted as structured JSON (`code`, `category`, `message`,
+`retryable`, `stage`, `provider`, `attempt`, `timestamp`, `correlationId`) and
+exposed through `GET /voice/job/:id` under `failure`. Provider credentials,
+access tokens, authorization headers, and internal stack traces are never
+persisted or returned.
+
+### Retry & Recovery
+
+- **Idempotent enqueue** — jobs use a deterministic Bull job id derived from
+  the persisted job id, so duplicate submissions cannot create duplicate jobs.
+- **Checkpoint resume** — if a stage's output (`transcribedText` or
+  `generatedAudioUrl`) is already persisted, a retry skips that stage instead
+  of redoing the provider call.
+- **Bounded retries** — retryable failures (network timeouts, 5xx, rate
+  limiting) are retried with exponential backoff up to `maxRetries` (default 3).
+  Non-retryable failures (invalid audio, unsupported format, malformed input,
+  auth/configuration errors) fail immediately.
+- **Manual retry** — `POST /voice/job/:id/retry` re-queues a permanently failed
+  job and resumes it from the last valid checkpoint.
+
 ## Error Handling
 
 ### Common Errors

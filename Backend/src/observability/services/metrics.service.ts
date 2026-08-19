@@ -32,6 +32,10 @@ export class MetricsService {
   private jobsFailed: promClient.Counter;
   private jobQueueSize: promClient.Gauge;
 
+  // Voice-processing recovery metrics
+  private voiceRetries: promClient.Counter;
+  private voiceProviderFailures: promClient.Counter;
+
   // Database Metrics
   private databaseQueryDuration: promClient.Histogram;
   private databaseQueryErrors: promClient.Counter;
@@ -159,6 +163,18 @@ export class MetricsService {
       name: 'job_queue_size',
       help: 'Number of jobs in queue',
       labelNames: ['queue_name'],
+    });
+
+    this.voiceRetries = new promClient.Counter({
+      name: 'voice_jobs_retried_total',
+      help: 'Total voice jobs that were scheduled for a retry',
+      labelNames: ['job_type', 'correlation_id'],
+    });
+
+    this.voiceProviderFailures = new promClient.Counter({
+      name: 'voice_provider_failures_total',
+      help: 'Total voice provider failures, normalized by error code',
+      labelNames: ['provider', 'stage', 'code', 'correlation_id'],
     });
 
     // Database Metrics
@@ -336,11 +352,7 @@ export class MetricsService {
     this.jobsActive.inc({ job_name: jobName, correlation_id: correlationId });
   }
 
-  recordJobCompleted(
-    jobName: string,
-    duration: number,
-    correlationId: string,
-  ) {
+  recordJobCompleted(jobName: string, duration: number, correlationId: string) {
     this.jobDuration.observe(
       { job_name: jobName, status: 'success', correlation_id: correlationId },
       duration,
@@ -382,6 +394,27 @@ export class MetricsService {
 
   updateJobQueueSize(queueName: string, size: number) {
     this.jobQueueSize.set({ queue_name: queueName }, size);
+  }
+
+  recordVoiceRetry(jobType: string, correlationId: string) {
+    this.voiceRetries.inc({
+      job_type: jobType,
+      correlation_id: correlationId,
+    });
+  }
+
+  recordProviderFailure(
+    provider: string,
+    stage: string,
+    code: string,
+    correlationId: string,
+  ) {
+    this.voiceProviderFailures.inc({
+      provider,
+      stage,
+      code,
+      correlation_id: correlationId,
+    });
   }
 
   // ── Database Metrics Methods ──────────────────────────────────────────────

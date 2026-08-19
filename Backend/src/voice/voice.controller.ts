@@ -52,4 +52,9 @@ export class VoiceController {
   async getJobResult(@Param('id') id: string) {
     return this.voiceService.getJobResult(id);
   }
+
+  @Post('job/:id/retry')
+  async retryJob(@Param('id') id: string): Promise<{ jobId: string }> {
+    return this.voiceService.retryJob(id);
+  }
 }

@@ -1,138 +1,308 @@
 // src/voice/voice.processor.ts
-import { Process, Processor } from '@nestjs/bull';
+import { Process, Processor, OnQueueFailed } from '@nestjs/bull';
 import type { Job } from 'bull';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { VoiceJob, JobStatus } from './entities/voice-job.entity';
+import { Logger } from '@nestjs/common';
+import { JobStatus, JobType, VoiceJob } from './entities/voice-job.entity';
+import { VoiceJobStage } from './types/voice-job-stage.enum';
 import { VoiceService } from './services/voice.service';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { QueueJobTracingWrapper } from '../observability/middleware/queue-job-tracing.wrapper';
+import { VoiceProviderService } from './providers/voice-provider.service';
 import { MetricsService } from '../observability/services/metrics.service';
+import { LoggingService } from '../observability/services/logging.service';
+import {
+  VoiceErrorCode,
+  VoiceFailureMetadata,
+  VoiceProcessingError,
+  normalizeVoiceError,
+} from './types/voice-errors';
+
+interface VoiceJobData {
+  jobId: string;
+  correlationId?: string;
+}
+
+type VoiceJobResult = { success: boolean; resumed?: boolean };
 
 @Processor('voice-processing')
 export class VoiceProcessor {
+  private readonly logger = new Logger(VoiceProcessor.name);
+
   constructor(
-    @InjectRepository(VoiceJob)
-    private voiceJobRepository: Repository<VoiceJob>,
     private voiceService: VoiceService,
-    private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
+    private provider: VoiceProviderService,
     private readonly metricsService: MetricsService,
+    private readonly loggingService: LoggingService,
   ) {}
 
   @Process('process-stt')
-  async handleSTT(job: Job) {
-    const wrappedProcess = this.queueJobTracingWrapper.wrapProcessor(
-      async (jobToProcess: Job) => {
-        const { jobId } = jobToProcess.data;
-        const correlationId = jobToProcess.data?.correlationId || `voice-${jobId}`;
-        const start = Date.now();
-
-        this.metricsService.recordJobStart('voice-processing', correlationId);
-
-        try {
-          const voiceJob = await this.voiceJobRepository.findOne({
-            where: { id: jobId },
-          });
-          if (!voiceJob) throw new Error('Job not found');
-
-          await this.voiceService.updateJobStatus(jobId, JobStatus.PROCESSING);
-
-          // Simulate Whisper API call
-          const transcribedText = await this.transcribeAudio(voiceJob.audioUrl);
-
-          await this.voiceService.updateJobStatus(jobId, JobStatus.COMPLETED, {
-            transcribedText,
-          });
-
-          const duration = (Date.now() - start) / 1000;
-          this.metricsService.recordJobCompleted('voice-processing', duration, correlationId);
-        } catch (error: any) {
-          const duration = (Date.now() - start) / 1000;
-          this.metricsService.recordJobFailed('voice-processing', duration, error.constructor.name, correlationId);
-          const canRetry = await this.voiceService.incrementRetry(jobId);
-
-          if (canRetry) {
-            await this.voiceService.updateJobStatus(jobId, JobStatus.PENDING);
-            throw error; // Bull will retry
-          } else {
-            await this.voiceService.updateJobStatus(jobId, JobStatus.FAILED, {
-              errorMessage: error.message,
-            });
-          }
-        }
-      },
-      'voice-processing',
-    );
-
-    return wrappedProcess(job);
+  async handleSTT(job: Job<VoiceJobData>): Promise<VoiceJobResult> {
+    return this.process(job, JobType.STT);
   }
 
   @Process('process-tts')
-  async handleTTS(job: Job) {
-    const wrappedProcess = this.queueJobTracingWrapper.wrapProcessor(
-      async (jobToProcess: Job) => {
-        const { jobId } = jobToProcess.data;
-        const correlationId = jobToProcess.data?.correlationId || `voice-${jobId}`;
-        const start = Date.now();
+  async handleTTS(job: Job<VoiceJobData>): Promise<VoiceJobResult> {
+    return this.process(job, JobType.TTS);
+  }
 
-        this.metricsService.recordJobStart('voice-processing', correlationId);
+  /**
+   * Shared, resumable pipeline driver.
+   *
+   * The persisted `VoiceJob` row is the source of truth. Each attempt:
+   *  1. short-circuits if the job is already complete (idempotent),
+   *  2. short-circuits if the terminal output is already persisted
+   *     (checkpoint resume — no redundant provider work),
+   *  3. otherwise performs the remaining external work and persists a
+   *     checkpoint before calling the next stage.
+   *
+   * Failures are normalized, persisted as structured metadata, and either
+   * retried (bounded) or marked permanently failed.
+   */
+  private async process(
+    job: Job<VoiceJobData>,
+    type: JobType,
+  ): Promise<VoiceJobResult> {
+    const { jobId } = job.data;
+    const correlationId = job.data.correlationId ?? `voice-${jobId}`;
+    const start = Date.now();
 
-        try {
-          const voiceJob = await this.voiceJobRepository.findOne({
-            where: { id: jobId },
-          });
-          if (!voiceJob) throw new Error('Job not found');
+    this.metricsService.recordJobStart('voice-processing', correlationId);
 
-          await this.voiceService.updateJobStatus(jobId, JobStatus.PROCESSING);
+    try {
+      const voiceJob = await this.voiceService.findOne(jobId);
+      if (!voiceJob) {
+        // Internal inconsistency: nothing to retry against.
+        const failure = normalizeVoiceError(new Error('Job not found'), {
+          code: VoiceErrorCode.INTERNAL_ERROR,
+          stage: VoiceJobStage.QUEUED,
+        });
+        this.recordFailureMetrics(type, correlationId, failure);
+        this.finishFailed(
+          failure.toMetadata(0, correlationId),
+          correlationId,
+          jobId,
+          start,
+        );
+        return { success: false };
+      }
 
-          // Simulate TTS API call
-          const audioPath = await this.generateSpeech(voiceJob.inputText || '');
+      // Idempotency: already completed → no-op.
+      if (voiceJob.status === JobStatus.COMPLETED) {
+        this.recordJobCompleted(correlationId, start);
+        return { success: true, resumed: true };
+      }
 
-          await this.voiceService.updateJobStatus(jobId, JobStatus.COMPLETED, {
-            generatedAudioUrl: audioPath,
-          });
+      // Checkpoint resume: terminal output already persisted → just finalize.
+      if (this.voiceService.hasCompletedOutput(voiceJob)) {
+        await this.voiceService.markCompleted(jobId);
+        this.loggingService.info('Voice job resumed from checkpoint', {
+          correlationId,
+          jobId,
+          type,
+          stage: voiceJob.stage,
+        });
+        this.recordJobCompleted(correlationId, start);
+        return { success: true, resumed: true };
+      }
 
-          const duration = (Date.now() - start) / 1000;
-          this.metricsService.recordJobCompleted('voice-processing', duration, correlationId);
-        } catch (error: any) {
-          const duration = (Date.now() - start) / 1000;
-          this.metricsService.recordJobFailed('voice-processing', duration, error.constructor.name, correlationId);
-          const canRetry = await this.voiceService.incrementRetry(jobId);
+      if (type === JobType.STT) {
+        await this.runStt(jobId, voiceJob, correlationId);
+      } else {
+        await this.runTts(jobId, voiceJob, correlationId);
+      }
 
-          if (canRetry) {
-            await this.voiceService.updateJobStatus(jobId, JobStatus.PENDING);
-            throw error; // Bull will retry
-          } else {
-            await this.voiceService.updateJobStatus(jobId, JobStatus.FAILED, {
-              errorMessage: error.message,
-            });
-          }
-        }
-      },
-      'voice-processing',
+      this.loggingService.info('Voice job completed', {
+        correlationId,
+        jobId,
+        type,
+        stage: VoiceJobStage.COMPLETED,
+      });
+      this.recordJobCompleted(correlationId, start);
+      return { success: true };
+    } catch (error) {
+      const failure = normalizeVoiceError(error, {
+        code:
+          type === JobType.STT
+            ? VoiceErrorCode.TRANSCRIPTION_FAILED
+            : VoiceErrorCode.TTS_FAILED,
+        stage:
+          type === JobType.STT
+            ? VoiceJobStage.TRANSCRIBING
+            : VoiceJobStage.GENERATING_TTS,
+      });
+
+      this.recordFailureMetrics(type, correlationId, failure);
+
+      const { retry } = await this.voiceService.recordFailureAndDecideRetry(
+        jobId,
+        failure.toMetadata(0, correlationId),
+      );
+
+      if (retry) {
+        this.metricsService.recordVoiceRetry(type, correlationId);
+        this.recordJobFailed(correlationId, start);
+        throw error; // Bull applies backoff and redelivers.
+      }
+
+      this.finishFailed(
+        failure.toMetadata(0, correlationId),
+        correlationId,
+        jobId,
+        start,
+      );
+      return { success: false };
+    }
+  }
+
+  private async runStt(
+    jobId: string,
+    voiceJob: VoiceJob,
+    correlationId: string,
+  ): Promise<void> {
+    await this.voiceService.markStarted(jobId, VoiceJobStage.TRANSCRIBING);
+    this.logStage(correlationId, jobId, 'stt', VoiceJobStage.TRANSCRIBING);
+
+    const transcribedText = await this.provider.transcribe(voiceJob.audioUrl);
+
+    // Checkpoint: persist the transcript BEFORE finalizing, so a crash here
+    // resumes from TRANSCRIPTION_COMPLETED instead of re-transcribing.
+    await this.voiceService.advanceStage(
+      jobId,
+      VoiceJobStage.TRANSCRIPTION_COMPLETED,
+      { transcribedText },
+    );
+    await this.voiceService.markCompleted(jobId);
+  }
+
+  private async runTts(
+    jobId: string,
+    voiceJob: VoiceJob,
+    correlationId: string,
+  ): Promise<void> {
+    await this.voiceService.markStarted(jobId, VoiceJobStage.GENERATING_TTS);
+    this.logStage(correlationId, jobId, 'tts', VoiceJobStage.GENERATING_TTS);
+
+    // Deterministic artifact path keeps a retry idempotent (no duplicate files).
+    const audioPath = await this.provider.synthesize(
+      voiceJob.inputText ?? '',
+      jobId,
     );
 
-    return wrappedProcess(job);
+    await this.voiceService.markCompleted(jobId, {
+      generatedAudioUrl: audioPath,
+    });
   }
 
-  private async transcribeAudio(audioPath: string | null): Promise<string> {
-    // TODO: Integrate with OpenAI Whisper API
-    // For now, return mock data
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    return 'Transcribed text from audio';
+  private finishFailed(
+    failureMetadata: VoiceFailureMetadata,
+    correlationId: string,
+    jobId: string,
+    start: number,
+  ): VoiceJobResult {
+    this.loggingService.error(
+      'Voice job permanently failed',
+      { message: failureMetadata.message },
+      {
+        correlationId,
+        jobId,
+        code: failureMetadata.code,
+        stage: failureMetadata.stage,
+        retryable: failureMetadata.retryable,
+      },
+    );
+    this.recordJobFailed(correlationId, start);
+    return { success: false };
   }
 
-  private async generateSpeech(text: string): Promise<string> {
-    // TODO: Integrate with TTS API (OpenAI TTS, Google Cloud TTS, etc.)
-    const outputDir = path.join(process.cwd(), 'uploads', 'tts');
-    await fs.mkdir(outputDir, { recursive: true });
-    const fileName = `${Date.now()}-speech.mp3`;
-    const filePath = path.join(outputDir, fileName);
+  private logStage(
+    correlationId: string,
+    jobId: string,
+    provider: 'stt' | 'tts',
+    stage: VoiceJobStage,
+  ): void {
+    this.loggingService.info('Voice stage started', {
+      correlationId,
+      jobId,
+      provider,
+      stage,
+    });
+  }
 
-    // Mock: create empty file
-    await fs.writeFile(filePath, Buffer.from(''));
+  private recordFailureMetrics(
+    type: JobType,
+    correlationId: string,
+    failure: VoiceProcessingError,
+  ): void {
+    this.metricsService.recordProviderFailure(
+      failure.provider ?? (type === JobType.STT ? 'whisper' : 'openai-tts'),
+      String(failure.stage ?? ''),
+      failure.code,
+      correlationId,
+    );
+    this.loggingService.error(
+      'Voice provider failure',
+      { message: failure.message },
+      {
+        correlationId,
+        type,
+        provider: failure.provider,
+        stage: failure.stage,
+        code: failure.code,
+        category: failure.category,
+        retryable: failure.retryable,
+      },
+    );
+  }
 
-    return filePath;
+  private recordJobCompleted(correlationId: string, start: number): void {
+    const duration = (Date.now() - start) / 1000;
+    this.metricsService.recordJobCompleted(
+      'voice-processing',
+      duration,
+      correlationId,
+    );
+  }
+
+  private recordJobFailed(correlationId: string, start: number): void {
+    const duration = (Date.now() - start) / 1000;
+    this.metricsService.recordJobFailed(
+      'voice-processing',
+      duration,
+      'VoiceProcessingError',
+      correlationId,
+    );
+  }
+
+  /**
+   * Safety net for unexpected failures that bypass the normal retry decision
+   * (e.g. a database outage). If Bull has exhausted its own attempts, ensure
+   * the persisted job is marked failed rather than left mid-flight.
+   */
+  @OnQueueFailed()
+  async onFailed(job: Job<VoiceJobData>, err: Error): Promise<void> {
+    const jobId = job?.data?.jobId;
+    if (!jobId) return;
+
+    const exhausted = job.attemptsMade >= (job.opts.attempts ?? 1);
+    if (!exhausted) return;
+
+    const voiceJob = await this.voiceService.findOne(jobId);
+    if (
+      !voiceJob ||
+      voiceJob.status === JobStatus.FAILED ||
+      voiceJob.status === JobStatus.COMPLETED
+    ) {
+      return;
+    }
+
+    const failure = normalizeVoiceError(err, {
+      code: VoiceErrorCode.INTERNAL_ERROR,
+      stage: voiceJob.stage,
+    });
+    await this.voiceService.markFailed(
+      jobId,
+      failure.toMetadata(job.attemptsMade),
+    );
+    this.logger.error(
+      `Voice job ${jobId} marked failed after unexpected queue exhaustion: ${err.message}`,
+    );
   }
 }
