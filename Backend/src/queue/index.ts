@@ -1,5 +1,6 @@
 // Queue Types
 export * from './types/job.types';
+export * from './types/queue.types';
 
 // Queue Service
 export { QueueService } from './services/queue.service';

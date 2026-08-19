@@ -1,17 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue, Job } from 'bull';
-import {
-  JobData,
-  JobResult,
-  JobStatus,
-  JobInfo,
-  RetryState,
-} from '../types/job.types';
+import { JobData, JobResult, JobStatus, JobInfo, RetryState } from '../types/job.types';
+import { QueueMetrics, DlqEntry } from '../types/queue.types';
 import { RedisService } from '../../redis/redis.service';
 import { QueueJobTracingWrapper } from '../../observability/middleware/queue-job-tracing.wrapper';
 import { TraceContext } from '../../observability/types/trace-context.interface';
 import { QueueIdempotencyGuard } from '../queue-idempotency.guard';
+import { QueueJobError } from '../types/errors';
 
 @Injectable()
 export class QueueService {
@@ -20,6 +16,29 @@ export class QueueService {
   // DLQ key prefix in Redis
   private readonly DLQ_PREFIX = 'queue:dlq:';
   private readonly RETRY_STATE_PREFIX = 'queue:retry:';
+
+  // In-memory metrics counters (reset on process restart)
+  private readonly metrics = {
+    deduplicatedCount: 0,
+    retryAttempts: 0,
+    retryExhaustedCount: 0,
+    byQueue: new Map<
+      string,
+      { submitted: number; deduplicated: number; retried: number; failed: number }
+    >(),
+  };
+
+  private getQueueMetrics(queueName: string) {
+    if (!this.metrics.byQueue.has(queueName)) {
+      this.metrics.byQueue.set(queueName, {
+        submitted: 0,
+        deduplicated: 0,
+        retried: 0,
+        failed: 0,
+      });
+    }
+    return this.metrics.byQueue.get(queueName)!;
+  }
 
   constructor(
     @InjectQueue('deploy-contract') private deployContractQueue: Queue,
@@ -89,6 +108,8 @@ export class QueueService {
       const isDuplicate =
         await this.idempotencyGuard.isDuplicate(idempotencyKey);
       if (isDuplicate.isDuplicate) {
+        this.metrics.deduplicatedCount++;
+        this.getQueueMetrics(queueName).deduplicated++;
         this.logger.warn(
           `Duplicate job rejected: ${jobName} on ${queueName} (existing job: ${isDuplicate.jobId})`,
         );
@@ -120,7 +141,15 @@ export class QueueService {
       await this.idempotencyGuard.acquireIdempotencyKey(idempotencyKey, job.id);
     }
 
-    // Initialize retry state
+    // Resolve backoff parameters from options or defaults
+    const backoffType = options.backoff?.type ?? 'exponential';
+    const backoffDelay = options.backoff?.delay ?? 2000;
+    const idempotencyKey = this.idempotencyGuard.generateIdempotencyKey(
+      `${queueName}:${jobName}`,
+      data as Record<string, any>,
+    );
+
+    // Initialize retry state with backoff parameters
     await this.saveRetryState({
       jobId: job.id.toString(),
       queueName,
@@ -129,12 +158,12 @@ export class QueueService {
       maxAttempts: options.attempts || 3,
       firstAttemptedAt: new Date().toISOString(),
       lastAttemptedAt: new Date().toISOString(),
-      idempotencyKey: this.idempotencyGuard.generateIdempotencyKey(
-        `${queueName}:${jobName}`,
-        data as Record<string, any>,
-      ),
+      idempotencyKey,
+      backoffType,
+      backoffDelay,
     });
 
+    this.getQueueMetrics(queueName).submitted++;
     this.logger.log(`Job added: ${jobName} with ID: ${job.id}`);
     return job;
   }
@@ -383,10 +412,15 @@ export class QueueService {
   private async handleJobFailure(job: Job, error: Error): Promise<void> {
     const maxAttempts = job.opts.attempts || 1;
     const attempts = job.attemptsMade;
+    const queueName = job.queue.name;
 
     this.logger.error(
       `Job ${job.id} (${job.name}) failed: ${error.message} (attempt ${attempts}/${maxAttempts})`,
     );
+
+    // Track retry attempt metrics
+    this.getQueueMetrics(queueName).retried++;
+    this.metrics.retryAttempts++;
 
     // Update retry state
     const retryState = await this.getRetryState(job.id.toString());
@@ -394,27 +428,48 @@ export class QueueService {
       retryState.attemptCount = attempts;
       retryState.lastError = error.message;
       retryState.lastErrorStack = error.stack;
+      retryState.lastErrorType = error.constructor?.name;
+      retryState.lastRetryable = (error as QueueJobError).retryable ?? true;
       retryState.lastAttemptedAt = new Date().toISOString();
       retryState.maxAttempts = maxAttempts;
+
+      // Calculate next retry time if retries remain
+      if (attempts < maxAttempts) {
+        const delay = this.calculateBackoffDelay(
+          retryState.backoffType,
+          retryState.backoffDelay,
+          attempts,
+        );
+        retryState.nextRetryAt = new Date(Date.now() + delay).toISOString();
+      }
+
       await this.saveRetryState(retryState);
     }
 
-    // If max retries exceeded, move to DLQ with retry state
+    // If max retries exceeded, move to DLQ with structured metadata
     if (attempts >= maxAttempts) {
-      const dlqKey = `${this.DLQ_PREFIX}${job.queue.name}`;
-      const dlqItem = JSON.stringify({
+      this.metrics.retryExhaustedCount++;
+      this.getQueueMetrics(queueName).failed++;
+
+      const dlqKey = `${this.DLQ_PREFIX}${queueName}`;
+      const dlqEntry: DlqEntry = {
         id: job.id,
         name: job.name,
+        queueName,
         data: job.data,
-        error: error.message,
-        attempts: attempts,
-        maxAttempts: maxAttempts,
+        errorMessage: error.message,
+        errorStack: error.stack?.slice(0, 4096),
+        errorType: error.constructor?.name,
+        retryable: (error as QueueJobError).retryable ?? true,
+        attempts,
+        maxAttempts,
         failedAt: new Date().toISOString(),
-        retryState: retryState || null,
-      });
+        idempotencyKey: retryState?.idempotencyKey,
+        retryState: retryState || undefined,
+      };
 
       try {
-        await this.redisService.client.rPush(dlqKey, dlqItem);
+        await this.redisService.client.rPush(dlqKey, JSON.stringify(dlqEntry));
         this.logger.warn(
           `Job ${job.id} (${job.name}) moved to DLQ after ${attempts} attempts`,
         );
@@ -425,9 +480,41 @@ export class QueueService {
       // Mark completion in retry state
       if (retryState) {
         retryState.completedAt = new Date().toISOString();
+        retryState.nextRetryAt = undefined;
         await this.saveRetryState(retryState);
       }
     }
+  }
+
+  /**
+   * Calculate the backoff delay for a given attempt.
+   */
+  private calculateBackoffDelay(
+    backoffType: 'exponential' | 'fixed',
+    baseDelay: number,
+    attempt: number,
+  ): number {
+    if (backoffType === 'fixed') {
+      return baseDelay;
+    }
+    // Exponential: baseDelay * 2^(attempt)  (attempt 0 = baseDelay, 1 = 2x, etc.)
+    return baseDelay * Math.pow(2, attempt);
+  }
+
+  /**
+   * Get current queue metrics snapshot.
+   */
+  getMetrics(): QueueMetrics {
+    const byQueue: QueueMetrics['byQueue'] = {};
+    for (const [name, counts] of this.metrics.byQueue) {
+      byQueue[name] = { ...counts };
+    }
+    return {
+      deduplicatedCount: this.metrics.deduplicatedCount,
+      retryAttempts: this.metrics.retryAttempts,
+      retryExhaustedCount: this.metrics.retryExhaustedCount,
+      byQueue,
+    };
   }
 
   /**

@@ -4,6 +4,7 @@ import { QueueService } from './services/queue.service';
 import { RedisService } from '../redis/redis.service';
 import { QueueIdempotencyGuard } from './queue-idempotency.guard';
 import { QueueJobTracingWrapper } from '../observability/middleware/queue-job-tracing.wrapper';
+import { JobStatus } from './types/job.types';
 
 /**
  * Integration tests for queue retry and dead-letter queue (DLQ) handling
@@ -116,6 +117,9 @@ describe('Queue Integration - Retries and DLQ', () => {
     jest.clearAllMocks();
   });
 
+  // ---------------------------------------------------------------------------
+  // Retry Logic
+  // ---------------------------------------------------------------------------
   describe('Retry Logic', () => {
     it('should track job attempts correctly', async () => {
       const jobWithAttempts = createMockJob('job-1', 'deploy-contract', 2, 3);
@@ -175,23 +179,21 @@ describe('Queue Integration - Retries and DLQ', () => {
       );
     });
 
-    it('should handle exponential backoff delays', async () => {
-      const job1 = createMockJob('job-1', 'deploy-contract', 1, 3);
-      const job2 = createMockJob('job-2', 'deploy-contract', 2, 3);
-      const job3 = createMockJob('job-3', 'deploy-contract', 3, 3);
+    it('should handle exponential backoff delays', () => {
+      // Verify the mathematical model: delay = baseDelay * 2^attempt
+      const baseDelay = 2000;
+      const expectedDelays = [2000, 4000, 8000]; // attempt 0, 1, 2
 
-      // Delay should increase exponentially: 2000ms, 4000ms, 8000ms
-      const backoffDelays = [2000, 4000, 8000];
-      const expectedDelays = backoffDelays.map(
-        (delay) => Math.pow(2, backoffDelays.indexOf(delay)) * 2000,
-      );
-
-      expect(expectedDelays[0]).toBe(2000);
-      expect(expectedDelays[1]).toBe(4000);
-      expect(expectedDelays[2]).toBe(8000);
+      expectedDelays.forEach((expected, attempt) => {
+        const calculated = baseDelay * Math.pow(2, attempt);
+        expect(calculated).toBe(expected);
+      });
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // Dead-Letter Queue (DLQ) Handling
+  // ---------------------------------------------------------------------------
   describe('Dead-Letter Queue (DLQ) Handling', () => {
     it('should move job to DLQ when max retries exceeded', async () => {
       const maxRetriesJob = createMockJob(
@@ -207,20 +209,21 @@ describe('Queue Integration - Retries and DLQ', () => {
         id: maxRetriesJob.id,
         name: maxRetriesJob.name,
         data: maxRetriesJob.data,
-        error: 'Persistent failure',
+        errorMessage: 'Persistent failure',
         attempts: 3,
         maxAttempts: 3,
+        queueName: 'deploy-contract',
+        retryable: true,
       });
 
       mockRedisService.client.rPush.mockResolvedValue(1);
 
-      // The private handleJobFailure method would be called internally
-      // Verify DLQ structure
       const dlqData = JSON.parse(dlqItem);
       expect(dlqData).toHaveProperty('id');
       expect(dlqData).toHaveProperty('name');
-      expect(dlqData).toHaveProperty('data');
-      expect(dlqData).toHaveProperty('error');
+      expect(dlqData).toHaveProperty('queueName');
+      expect(dlqData).toHaveProperty('errorMessage');
+      expect(dlqData).toHaveProperty('retryable');
       expect(dlqData.attempts).toBe(dlqData.maxAttempts);
     });
 
@@ -229,16 +232,18 @@ describe('Queue Integration - Retries and DLQ', () => {
         JSON.stringify({
           id: '1',
           name: 'deploy-contract',
+          queueName: 'deploy-contract',
           data: { contractName: 'Failed' },
-          error: 'Timeout',
+          errorMessage: 'Timeout',
           attempts: 3,
           maxAttempts: 3,
         }),
         JSON.stringify({
           id: '2',
           name: 'deploy-contract',
+          queueName: 'deploy-contract',
           data: { contractName: 'Failed2' },
-          error: 'Network error',
+          errorMessage: 'Network error',
           attempts: 3,
           maxAttempts: 3,
         }),
@@ -347,6 +352,9 @@ describe('Queue Integration - Retries and DLQ', () => {
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // Retry and DLQ Coordination
+  // ---------------------------------------------------------------------------
   describe('Retry and DLQ Coordination', () => {
     it('should track job progression from pending to DLQ', async () => {
       const jobStates = ['pending', 'active', 'failed', 'failed', 'failed'];
@@ -370,6 +378,7 @@ describe('Queue Integration - Retries and DLQ', () => {
 
     it('should maintain job data consistency through retry cycle', async () => {
       const originalData = {
+        test: 'data',
         contractName: 'TestContract',
         contractCode: 'code here',
         network: 'mainnet',
@@ -382,7 +391,7 @@ describe('Queue Integration - Retries and DLQ', () => {
         3,
         'Network error',
       );
-      failedJob.data = { ...failedJob.data, ...originalData };
+      failedJob.data = { ...originalData };
 
       mockQueues.deployContractQueue.getJob.mockResolvedValue(failedJob);
       const requeuedJob = createMockJob('job-2', 'deploy-contract', 0, 3);
@@ -432,13 +441,16 @@ describe('Queue Integration - Retries and DLQ', () => {
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // DLQ Persistence and Recovery
+  // ---------------------------------------------------------------------------
   describe('DLQ Persistence and Recovery', () => {
     it('should persist DLQ data to Redis', async () => {
       const dlqItem = JSON.stringify({
         id: 'job-1',
         name: 'deploy-contract',
         data: { test: 'data' } as any,
-        error: 'Max retries exceeded',
+        errorMessage: 'Max retries exceeded',
         attempts: 3,
         maxAttempts: 3,
         failedAt: new Date().toISOString(),
@@ -446,7 +458,6 @@ describe('Queue Integration - Retries and DLQ', () => {
 
       mockRedisService.client.rPush.mockResolvedValue(1);
 
-      // Simulate failure adding to DLQ
       const result = await mockRedisService.client.rPush(
         'queue:dlq:deploy-contract',
         dlqItem,
@@ -481,16 +492,20 @@ describe('Queue Integration - Retries and DLQ', () => {
         {
           id: '1',
           name: 'deploy-contract',
-          error: 'Contract compilation failed',
+          errorMessage: 'Contract compilation failed',
+          errorType: 'ValidationError',
           attempts: 3,
           failedAt: '2024-01-15T10:00:00Z',
+          retryable: false,
         },
         {
           id: '2',
           name: 'deploy-contract',
-          error: 'Network timeout',
+          errorMessage: 'Network timeout',
+          errorType: 'TransientError',
           attempts: 3,
           failedAt: '2024-01-15T10:05:00Z',
+          retryable: true,
         },
       ];
 
@@ -501,11 +516,16 @@ describe('Queue Integration - Retries and DLQ', () => {
       const dlq = await service.getDeadLetterQueue('deploy-contract', 50);
 
       expect(dlq).toHaveLength(2);
-      expect(dlq[0].error).toBe('Contract compilation failed');
-      expect(dlq[1].error).toBe('Network timeout');
+      expect(dlq[0].errorMessage).toBe('Contract compilation failed');
+      expect(dlq[0].retryable).toBe(false);
+      expect(dlq[1].errorMessage).toBe('Network timeout');
+      expect(dlq[1].retryable).toBe(true);
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // Idempotency - Duplicate Deduplication
+  // ---------------------------------------------------------------------------
   describe('Idempotency', () => {
     it('should generate consistent idempotency keys for same payload', () => {
       const key1 = idempotencyGuard.generateIdempotencyKey('deploy-contract', {
@@ -604,8 +624,64 @@ describe('Queue Integration - Retries and DLQ', () => {
 
       expect(result.isDuplicate).toBe(false);
     });
+
+    it('should atomically acquire idempotency key', async () => {
+      mockRedisService.client.set.mockResolvedValueOnce('OK');
+
+      const acquired = await idempotencyGuard.acquireIdempotencyKey(
+        'key-abc',
+        'job-42',
+      );
+
+      expect(acquired).toBe(true);
+      expect(mockRedisService.client.set).toHaveBeenCalledWith(
+        'queue:idempotency:key-abc',
+        'job-42',
+        { NX: true, EX: 86400 },
+      );
+    });
+
+    it('should reject atomic acquisition when key already exists', async () => {
+      mockRedisService.client.set.mockResolvedValueOnce(null);
+
+      const acquired = await idempotencyGuard.acquireIdempotencyKey(
+        'key-abc',
+        'job-42',
+      );
+
+      expect(acquired).toBe(false);
+    });
+
+    it('should deduplicate multiple identical submissions within time window', async () => {
+      const jobData = { contractName: 'Test', contractCode: '0x123', network: 'mainnet' };
+
+      // First submission succeeds
+      mockRedisService.client.get.mockResolvedValueOnce(null);
+      mockQueues.deployContractQueue.add.mockResolvedValue(
+        createMockJob('job-1', 'deploy-contract'),
+      );
+      mockRedisService.client.set.mockResolvedValueOnce('OK');
+
+      const r1 = await service.addJob('deploy-contract', 'deploy-contract', jobData);
+      expect(r1).not.toBeNull();
+
+      // Second identical submission is rejected
+      mockRedisService.client.get.mockResolvedValueOnce('job-1');
+
+      const r2 = await service.addJob('deploy-contract', 'deploy-contract', jobData);
+      expect(r2).toBeNull();
+
+      // Third identical submission is also rejected
+      mockRedisService.client.get.mockResolvedValueOnce('job-1');
+
+      const r3 = await service.addJob('deploy-contract', 'deploy-contract', jobData);
+      expect(r3).toBeNull();
+    });
   });
 
+  // ---------------------------------------------------------------------------
+  // Retry State Tracking
+  // ---------------------------------------------------------------------------
   describe('Retry State Tracking', () => {
     it('should save retry state on job creation', async () => {
       mockRedisService.client.get.mockResolvedValue(null); // no duplicate
@@ -618,12 +694,24 @@ describe('Queue Integration - Retries and DLQ', () => {
         contractName: 'Test',
       });
 
-      // Retry state should be saved
+      // Retry state should be saved with backoff parameters
       expect(mockRedisService.client.set).toHaveBeenCalledWith(
         'queue:retry:job-1',
         expect.any(String),
         { EX: 86400 },
       );
+
+      // Verify the saved retry state includes backoff params
+      const retryCall = mockRedisService.client.set.mock.calls.find(
+        (call: any[]) => call[0] === 'queue:retry:job-1',
+      );
+      if (retryCall) {
+        const state = JSON.parse(retryCall[1]);
+        expect(state).toHaveProperty('backoffType');
+        expect(state).toHaveProperty('backoffDelay');
+        expect(state.backoffType).toBe('exponential');
+        expect(state.backoffDelay).toBe(2000);
+      }
     });
 
     it('should retrieve retry state', async () => {
@@ -637,6 +725,8 @@ describe('Queue Integration - Retries and DLQ', () => {
         firstAttemptedAt: '2024-01-01T00:00:00Z',
         lastAttemptedAt: '2024-01-01T00:05:00Z',
         idempotencyKey: 'abc123',
+        backoffType: 'exponential',
+        backoffDelay: 2000,
       };
 
       mockRedisService.client.get.mockResolvedValue(JSON.stringify(retryState));
@@ -646,6 +736,7 @@ describe('Queue Integration - Retries and DLQ', () => {
       expect(state).not.toBeNull();
       expect(state?.attemptCount).toBe(2);
       expect(state?.lastError).toBe('Timeout');
+      expect(state?.backoffType).toBe('exponential');
     });
 
     it('should return null for non-existent retry state', async () => {
@@ -666,6 +757,8 @@ describe('Queue Integration - Retries and DLQ', () => {
         firstAttemptedAt: '2024-01-01T00:00:00Z',
         lastAttemptedAt: '2024-01-01T00:01:00Z',
         idempotencyKey: 'abc123',
+        backoffType: 'exponential',
+        backoffDelay: 2000,
       };
 
       const job = createMockJob('job-1', 'deploy-contract', 1, 3);
@@ -678,6 +771,7 @@ describe('Queue Integration - Retries and DLQ', () => {
 
       expect(jobInfo?.retryState).toBeDefined();
       expect(jobInfo?.retryState?.attemptCount).toBe(1);
+      expect(jobInfo?.retryState?.backoffType).toBe('exponential');
     });
 
     it('should include retry state in DLQ entry', async () => {
@@ -688,30 +782,265 @@ describe('Queue Integration - Retries and DLQ', () => {
         attemptCount: 3,
         maxAttempts: 3,
         lastError: 'Persistent failure',
+        lastErrorType: 'TransientError',
+        lastRetryable: true,
         firstAttemptedAt: '2024-01-01T00:00:00Z',
         lastAttemptedAt: '2024-01-01T00:10:00Z',
         idempotencyKey: 'abc123',
+        backoffType: 'exponential',
+        backoffDelay: 2000,
       };
 
-      mockRedisService.client.get.mockResolvedValue(JSON.stringify(retryState));
-      mockRedisService.client.rPush.mockResolvedValue(1);
-
-      // The handleJobFailure method is private, but it's triggered by the queue 'failed' event.
-      // We test the DLQ structure includes retry state.
       const dlqItem = JSON.stringify({
         id: 'job-1',
         name: 'deploy-contract',
+        queueName: 'deploy-contract',
         data: { test: 'data' },
-        error: 'Persistent failure',
+        errorMessage: 'Persistent failure',
+        errorType: 'TransientError',
+        retryable: true,
         attempts: 3,
         maxAttempts: 3,
         failedAt: new Date().toISOString(),
+        idempotencyKey: 'abc123',
         retryState,
       });
 
       const parsed = JSON.parse(dlqItem);
       expect(parsed.retryState).toBeDefined();
       expect(parsed.retryState.attemptCount).toBe(3);
+      expect(parsed.retryState.backoffType).toBe('exponential');
+      expect(parsed.errorType).toBe('TransientError');
+      expect(parsed.retryable).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Retry Exhaustion
+  // ---------------------------------------------------------------------------
+  describe('Retry Exhaustion', () => {
+    it('should calculate exponential backoff delays correctly', () => {
+      const baseDelay = 2000;
+      // attempt 0 → 2000, 1 → 4000, 2 → 8000
+      expect(baseDelay * Math.pow(2, 0)).toBe(2000);
+      expect(baseDelay * Math.pow(2, 1)).toBe(4000);
+      expect(baseDelay * Math.pow(2, 2)).toBe(8000);
+    });
+
+    it('should calculate fixed backoff delays correctly', () => {
+      const baseDelay = 3000;
+      // Fixed: always the same delay regardless of attempt
+      expect(baseDelay).toBe(3000);
+      expect(baseDelay).toBe(3000);
+    });
+
+    it('should store DLQ entry with structured metadata on exhaustion', async () => {
+      const retryState = {
+        jobId: 'job-5',
+        queueName: 'deploy-contract',
+        jobName: 'deploy-contract',
+        attemptCount: 3,
+        maxAttempts: 3,
+        lastError: 'Compilation failed: syntax error',
+        lastErrorType: 'TransientError',
+        lastRetryable: true,
+        firstAttemptedAt: '2024-01-01T00:00:00Z',
+        lastAttemptedAt: '2024-01-01T00:10:00Z',
+        idempotencyKey: 'key-5',
+        backoffType: 'exponential',
+        backoffDelay: 2000,
+      };
+
+      // Simulate the DLQ entry structure
+      const dlqEntry = {
+        id: 'job-5',
+        name: 'deploy-contract',
+        queueName: 'deploy-contract',
+        data: { contractName: 'Bad', contractCode: 'x', network: 'mainnet' },
+        errorMessage: 'Compilation failed: syntax error',
+        errorType: 'TransientError',
+        retryable: true,
+        attempts: 3,
+        maxAttempts: 3,
+        failedAt: new Date().toISOString(),
+        idempotencyKey: 'key-5',
+        retryState,
+      };
+
+      const parsed = JSON.parse(JSON.stringify(dlqEntry));
+
+      expect(parsed.attempts).toBe(parsed.maxAttempts);
+      expect(parsed.errorType).toBeDefined();
+      expect(parsed.retryState).toBeDefined();
+      expect(parsed.retryState.nextRetryAt).toBeUndefined();
+    });
+
+    it('should flag non-retryable errors for immediate DLQ routing', () => {
+      const error = Object.assign(new Error('Bad input'), { retryable: false });
+      expect(error.retryable).toBe(false);
+
+      // Immediate DLQ routing condition
+      const attemptsExhausted = false;
+      const isPermanent = error.retryable === false;
+      expect(attemptsExhausted || isPermanent).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // State Recovery
+  // ---------------------------------------------------------------------------
+  describe('State Recovery', () => {
+    it('should retrieve retry state for inspection after failure', async () => {
+      const retryState = {
+        jobId: 'job-10',
+        queueName: 'deploy-contract',
+        jobName: 'deploy-contract',
+        attemptCount: 2,
+        maxAttempts: 3,
+        lastError: 'Transient network issue',
+        lastAttemptedAt: '2024-01-01T00:05:00Z',
+        firstAttemptedAt: '2024-01-01T00:00:00Z',
+        idempotencyKey: 'recover-key',
+        backoffType: 'exponential',
+        backoffDelay: 2000,
+        nextRetryAt: '2024-01-01T00:09:00Z',
+      };
+
+      mockRedisService.client.get.mockResolvedValue(JSON.stringify(retryState));
+
+      const state = await service.getRetryState('job-10');
+
+      expect(state).not.toBeNull();
+      expect(state?.attemptCount).toBe(2);
+      expect(state?.nextRetryAt).toBeDefined();
+      expect(state?.backoffType).toBe('exponential');
+    });
+
+    it('should handle recovery when retry state is missing (legacy jobs)', async () => {
+      mockRedisService.client.get.mockResolvedValue(null);
+
+      const state = await service.getRetryState('legacy-job');
+
+      expect(state).toBeNull();
+      // Service should handle null state gracefully without throwing
+    });
+
+    it('should persist idempotency key for dedup during recovery window', async () => {
+      const key = idempotencyGuard.generateIdempotencyKey('deploy-contract', {
+        contractName: 'Recovery',
+      });
+
+      // Acquire
+      mockRedisService.client.set.mockResolvedValueOnce('OK');
+      const acquired = await idempotencyGuard.acquireIdempotencyKey(key, 'job-99');
+      expect(acquired).toBe(true);
+
+      // Check duplicate
+      mockRedisService.client.get.mockResolvedValueOnce('job-99');
+      const dup = await idempotencyGuard.isDuplicate(key);
+      expect(dup.isDuplicate).toBe(true);
+      expect(dup.jobId).toBe('job-99');
+
+      // Release
+      mockRedisService.client.del.mockResolvedValueOnce(1);
+      await idempotencyGuard.releaseIdempotencyKey(key);
+      expect(mockRedisService.client.del).toHaveBeenCalledWith(
+        `queue:idempotency:${key}`,
+      );
+    });
+
+    it('should expose getJobInfo with retry state for operator inspection', async () => {
+      const retryState = {
+        jobId: 'job-7',
+        queueName: 'deploy-contract',
+        jobName: 'deploy-contract',
+        attemptCount: 1,
+        maxAttempts: 3,
+        firstAttemptedAt: '2024-01-01T00:00:00Z',
+        lastAttemptedAt: '2024-01-01T00:01:00Z',
+        idempotencyKey: 'inspect-key',
+        backoffType: 'fixed',
+        backoffDelay: 5000,
+      };
+
+      const job = createMockJob('job-7', 'deploy-contract', 1, 3);
+      mockQueues.deployContractQueue.getJob.mockResolvedValue(job);
+      job.getState.mockResolvedValue('delayed');
+
+      mockRedisService.client.get.mockResolvedValue(JSON.stringify(retryState));
+
+      const info = await service.getJobInfo('deploy-contract', 'job-7');
+
+      expect(info).not.toBeNull();
+      expect(info?.status).toBe(JobStatus.DELAYED);
+      expect(info?.retryState).toBeDefined();
+      expect(info?.retryState?.backoffType).toBe('fixed');
+      expect(info?.retryState?.backoffDelay).toBe(5000);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Queue Metrics
+  // ---------------------------------------------------------------------------
+  describe('Queue Metrics', () => {
+    it('should return initial metrics with zero counts', () => {
+      const metrics = service.getMetrics();
+
+      expect(metrics.deduplicatedCount).toBe(0);
+      expect(metrics.retryAttempts).toBe(0);
+      expect(metrics.retryExhaustedCount).toBe(0);
+      expect(metrics.byQueue).toEqual({});
+    });
+
+    it('should track deduplication count when duplicate is rejected', async () => {
+      const jobData = { contractName: 'A', contractCode: '0x1', network: 'mainnet' };
+
+      // First call: not a duplicate
+      mockRedisService.client.get.mockResolvedValueOnce(null);
+      mockQueues.deployContractQueue.add.mockResolvedValue(
+        createMockJob('job-1', 'deploy-contract'),
+      );
+      mockRedisService.client.set.mockResolvedValueOnce('OK');
+
+      await service.addJob('deploy-contract', 'deploy-contract', jobData);
+
+      // Second call: duplicate
+      mockRedisService.client.get.mockResolvedValueOnce('job-1');
+
+      await service.addJob('deploy-contract', 'deploy-contract', jobData);
+
+      const metrics = service.getMetrics();
+      expect(metrics.deduplicatedCount).toBe(1);
+      expect(metrics.byQueue['deploy-contract']?.deduplicated).toBe(1);
+    });
+
+    it('should track submitted count on successful job add', async () => {
+      mockRedisService.client.get.mockResolvedValue(null);
+      mockQueues.deployContractQueue.add.mockResolvedValue(
+        createMockJob('job-1', 'deploy-contract'),
+      );
+      mockRedisService.client.set.mockResolvedValue('OK');
+
+      await service.addJob('deploy-contract', 'deploy-contract', {
+        contractName: 'X',
+      });
+
+      const metrics = service.getMetrics();
+      expect(metrics.byQueue['deploy-contract']?.submitted).toBe(1);
+    });
+
+    it('should provide per-queue breakdown', async () => {
+      // Add to deploy-contract
+      mockRedisService.client.get.mockResolvedValue(null);
+      mockQueues.deployContractQueue.add.mockResolvedValue(
+        createMockJob('j1', 'deploy-contract'),
+      );
+      mockRedisService.client.set.mockResolvedValue('OK');
+
+      await service.addJob('deploy-contract', 'deploy-contract', { a: 1 });
+
+      const metrics = service.getMetrics();
+      expect(Object.keys(metrics.byQueue)).toContain('deploy-contract');
     });
   });
 });

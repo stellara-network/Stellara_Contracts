@@ -19,11 +19,11 @@ export class QueueIdempotencyGuard {
    * key is stable regardless of key insertion order, and — critically — the
    * full payload is included (a naive array replacer drops nested fields).
    */
-  generateIdempotencyKey(
-    jobType: string,
-    payload: Record<string, any>,
-  ): string {
-    const canonical = JSON.stringify(this.sortKeys({ jobType, payload }));
+  generateIdempotencyKey(jobType: string, payload: Record<string, any>): string {
+    const canonical = JSON.stringify({
+      jobType,
+      payload: this.sortKeys(payload),
+    });
     return crypto.createHash('sha256').update(canonical).digest('hex');
   }
 
@@ -40,6 +40,21 @@ export class QueueIdempotencyGuard {
         }, {});
     }
     return value;
+  }
+
+  /**
+   * Recursively sort object keys so that key order differences do not
+   * produce different hashes for semantically identical payloads.
+   */
+  private sortKeys(obj: any): any {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map((item) => this.sortKeys(item));
+    return Object.keys(obj)
+      .sort()
+      .reduce((sorted: Record<string, any>, key) => {
+        sorted[key] = this.sortKeys(obj[key]);
+        return sorted;
+      }, {});
   }
 
   /**

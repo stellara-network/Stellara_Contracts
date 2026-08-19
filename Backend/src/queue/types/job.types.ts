@@ -52,10 +52,19 @@ export interface RetryState {
   maxAttempts: number;
   lastError?: string;
   lastErrorStack?: string;
+  lastErrorType?: string;
+  /** Whether the last error was marked retryable */
+  lastRetryable?: boolean;
   firstAttemptedAt: string;
   lastAttemptedAt: string;
   completedAt?: string;
   idempotencyKey: string;
+  /** Backoff strategy used for retries */
+  backoffType: 'exponential' | 'fixed';
+  /** Base delay in milliseconds between retries */
+  backoffDelay: number;
+  /** ISO-8601 timestamp of the next scheduled retry, if any */
+  nextRetryAt?: string;
 }
 
 export interface IdempotencyResult {
