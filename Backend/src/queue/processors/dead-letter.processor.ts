@@ -12,7 +12,7 @@ export class DeadLetterProcessor {
   private readonly logger = new Logger(DeadLetterProcessor.name);
 
   @Process()
-  async handleFailedJob(job: Job): Promise<void> {
+  handleFailedJob(job: Job): void {
     this.logger.error(
       `DLQ job received — queue=${job.data?.originalQueue} id=${job.data?.originalJobId}`,
       JSON.stringify({

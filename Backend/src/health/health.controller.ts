@@ -71,7 +71,7 @@ export class HealthController {
     }
 
     // Auth
-    const authCheck = await this.authHealthIndicator.isHealthy();
+    const authCheck = this.authHealthIndicator.isHealthy();
     checks.auth = authCheck;
     if (authCheck.status === 'error') {
       allHealthy = false;

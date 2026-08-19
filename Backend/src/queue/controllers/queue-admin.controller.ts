@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QueueService } from '../services/queue.service';
-import { JobInfo, JobStatus } from '../types/job.types';
 
 @ApiTags('Queue Admin')
 @Controller('admin/queue')

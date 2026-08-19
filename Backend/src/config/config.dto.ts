@@ -8,7 +8,6 @@ import {
   Matches,
   IsIn,
   IsBooleanString,
-  IsNumberString,
 } from 'class-validator';
 
 export class ConfigDto {

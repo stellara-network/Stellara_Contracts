@@ -15,7 +15,6 @@ describe('StartupValidationService', () => {
   let service: StartupValidationService;
   let dataSource: DataSource;
   let configService: ConfigService;
-  let maskingService: SecretsMaskingService;
 
   const mockRedisClient = {
     connect: jest.fn().mockResolvedValue(undefined),
@@ -55,7 +54,6 @@ describe('StartupValidationService', () => {
     service = module.get<StartupValidationService>(StartupValidationService);
     dataSource = module.get<DataSource>(DataSource);
     configService = module.get<ConfigService>(ConfigService);
-    maskingService = module.get<SecretsMaskingService>(SecretsMaskingService);
   });
 
   afterEach(() => {

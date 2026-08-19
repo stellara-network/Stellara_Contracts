@@ -1,4 +1,4 @@
-import { WorkflowDefinition, StepDefinition, WorkflowContext } from '../types';
+import { WorkflowDefinition, WorkflowContext } from '../types';
 import { WorkflowType } from '../types/workflow-type.enum';
 
 export const aiJobChainWorkflow: WorkflowDefinition = {
@@ -35,7 +35,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           queuedAt: new Date(),
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating STT processing for workflow: ${context.workflowId}`,
         );
@@ -44,6 +44,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           // Cancel the STT job if still processing
           console.log(`Cancelling STT job: ${output.jobId}`);
         }
+        return Promise.resolve();
       },
     },
     {
@@ -87,11 +88,12 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
 
         throw new Error('STT processing timed out');
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating STT await for workflow: ${context.workflowId}`,
         );
         // No specific compensation needed
+        return Promise.resolve();
       },
     },
     {
@@ -122,7 +124,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           queuedAt: new Date(),
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating LLM processing for workflow: ${context.workflowId}`,
         );
@@ -131,6 +133,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           // Cancel the LLM job if still processing
           console.log(`Cancelling LLM job: ${output.jobId}`);
         }
+        return Promise.resolve();
       },
     },
     {
@@ -173,11 +176,12 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
 
         throw new Error('LLM processing timed out');
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating LLM await for workflow: ${context.workflowId}`,
         );
         // No specific compensation needed
+        return Promise.resolve();
       },
     },
     {
@@ -208,7 +212,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           queuedAt: new Date(),
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating TTS processing for workflow: ${context.workflowId}`,
         );
@@ -217,6 +221,7 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           // Cancel the TTS job if still processing
           console.log(`Cancelling TTS job: ${output.jobId}`);
         }
+        return Promise.resolve();
       },
     },
     {
@@ -262,11 +267,12 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
 
         throw new Error('TTS processing timed out');
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating TTS await for workflow: ${context.workflowId}`,
         );
         // No specific compensation needed
+        return Promise.resolve();
       },
     },
     {
@@ -295,12 +301,13 @@ export const aiJobChainWorkflow: WorkflowDefinition = {
           userId: context.userId,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating final delivery for workflow: ${context.workflowId}`,
         );
         // Log delivery failure for manual intervention
         console.log(`Delivery failed for user ${context.userId}`);
+        return Promise.resolve();
       },
     },
   ],

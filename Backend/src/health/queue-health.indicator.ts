@@ -32,15 +32,13 @@ export class QueueHealthIndicator {
         this.indexMarketNewsQueue,
       ];
 
-      let totalWaiting = 0;
       let totalFailed = 0;
 
       for (const queue of queues) {
-        const [waiting, failed] = await Promise.all([
+        const [, failed] = await Promise.all([
           queue.getWaitingCount(),
           queue.getFailedCount(),
         ]);
-        totalWaiting += waiting;
         totalFailed += failed;
       }
 

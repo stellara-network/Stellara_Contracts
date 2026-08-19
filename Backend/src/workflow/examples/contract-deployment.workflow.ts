@@ -1,4 +1,4 @@
-import { WorkflowDefinition, StepDefinition, WorkflowContext } from '../types';
+import { WorkflowDefinition, WorkflowContext } from '../types';
 import { WorkflowType } from '../types/workflow-type.enum';
 
 export const contractDeploymentWorkflow: WorkflowDefinition = {
@@ -34,11 +34,12 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           bytecode: '0x1234567890abcdef',
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating contract validation for workflow: ${context.workflowId}`,
         );
         // No compensation needed for validation step
+        return Promise.resolve();
       },
     },
     {
@@ -48,7 +49,6 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
       execute: async (input: any, context: WorkflowContext) => {
         console.log(`Deploying contract for workflow: ${context.workflowId}`);
 
-        const { contractCode, contractName } = input;
         const validationOutput = context.metadata?.validate_contract_code;
 
         if (!validationOutput?.isValid) {
@@ -67,7 +67,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           gasUsed: 1500000,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating contract deployment for workflow: ${context.workflowId}`,
         );
@@ -77,6 +77,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           // to mark the contract as invalid or trigger cleanup
           console.log(`Marking contract ${output.contractAddress} for cleanup`);
         }
+        return Promise.resolve();
       },
     },
     {
@@ -102,7 +103,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           explorerUrl: `https://etherscan.io/address/${deploymentOutput.contractAddress}`,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating contract verification for workflow: ${context.workflowId}`,
         );
@@ -113,6 +114,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
             `Removing verification for contract ${output.contractAddress}`,
           );
         }
+        return Promise.resolve();
       },
     },
     {
@@ -138,7 +140,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           abiHash: '0xabcdef1234567890',
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating contract indexing for workflow: ${context.workflowId}`,
         );
@@ -147,6 +149,7 @@ export const contractDeploymentWorkflow: WorkflowDefinition = {
           // Remove from indexing service
           console.log(`Removing contract ${output.contractAddress} from index`);
         }
+        return Promise.resolve();
       },
     },
   ],

@@ -62,7 +62,7 @@ export class SecretsMaskingService {
     ],
     // Hex/base64 values that follow "secret", "token", "key" (case-insensitive)
     [
-      /\b(secret|token|password|key)\b\s*[:=]\s*['"]?[A-Za-z0-9+/=_\-]{8,}['"]?/gi,
+      /\b(secret|token|password|key)\b\s*[:=]\s*['"]?[A-Za-z0-9+/=_-]{8,}['"]?/gi,
       '$1=***',
     ],
   ];

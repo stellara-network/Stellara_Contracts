@@ -1,6 +1,5 @@
 import {
   Injectable,
-  UnauthorizedException,
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
@@ -9,7 +8,7 @@ import { Repository } from 'typeorm';
 import { WalletBinding } from '../entities/wallet-binding.entity';
 import { User } from '../entities/user.entity';
 import * as nacl from 'tweetnacl';
-import { Keypair, StrKey } from '@stellar/stellar-sdk';
+import { StrKey } from '@stellar/stellar-sdk';
 
 @Injectable()
 export class WalletService {
@@ -20,11 +19,11 @@ export class WalletService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async verifySignature(
+  verifySignature(
     publicKey: string,
     signature: string,
     message: string,
-  ): Promise<boolean> {
+  ): boolean {
     try {
       // Decode the Stellar public key to raw bytes
       const publicKeyBytes = StrKey.decodeEd25519PublicKey(publicKey);

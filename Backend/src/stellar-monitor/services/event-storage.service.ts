@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, MoreThan, LessThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import { StellarEvent } from '../entities/stellar-event.entity';
 import { EventType, DeliveryStatus } from '../types/stellar.types';
 import { StellarEventDto } from '../dto/stellar-event.dto';

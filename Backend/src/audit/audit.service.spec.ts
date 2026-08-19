@@ -38,7 +38,7 @@ describe('AuditService', () => {
     store: T[],
   ) => ({
     create: jest.fn((value) => value),
-    save: jest.fn(async (value) => {
+    save: jest.fn((value) => {
       if (Array.isArray(value)) {
         store.push(...value);
         return value;
@@ -51,12 +51,12 @@ describe('AuditService', () => {
       store.push(saved);
       return saved;
     }),
-    clear: jest.fn(async () => {
+    clear: jest.fn(() => {
       store.splice(0, store.length);
     }),
-    delete: jest.fn(async () => undefined),
-    findOne: jest.fn(async () => sortByChainOrder(store, 'DESC')[0] ?? null),
-    find: jest.fn(async () => sortByChainOrder(store, 'ASC')),
+    delete: jest.fn(() => undefined),
+    findOne: jest.fn(() => sortByChainOrder(store, 'DESC')[0] ?? null),
+    find: jest.fn(() => sortByChainOrder(store, 'ASC')),
     createQueryBuilder: jest.fn(createQueryBuilder),
   });
 

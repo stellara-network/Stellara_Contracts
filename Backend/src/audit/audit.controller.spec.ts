@@ -44,8 +44,6 @@ describe('AuditController (Admin)', () => {
     };
     mockAuditService.getLogs.mockResolvedValue(logsMock);
 
-    const req = { user: { role: Role.ADMIN } }; // simulate admin user
-
     const result = await controller.getLogs(1, 10);
     expect(result).toEqual(logsMock);
     expect(auditService.getLogs).toHaveBeenCalledWith(1, 10, {
@@ -58,7 +56,6 @@ describe('AuditController (Admin)', () => {
   });
 
   it('should throw ForbiddenException for non-admin', async () => {
-    const req = { user: { role: Role.USER } }; // simulate non-admin
     try {
       await controller.getLogs(1, 10);
     } catch (e) {

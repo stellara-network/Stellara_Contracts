@@ -5,7 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { VoiceSessionService } from './voice-session.service';
-import { LlmService, LlmResponse } from './llm.service';
+import { LlmService } from './llm.service';
 import { QuotaService } from './quota.service';
 
 @Injectable()

@@ -190,7 +190,7 @@ export class TracingService implements OnModuleDestroy {
   /**
    * Cleanup on module destroy
    */
-  async onModuleDestroy() {
+  onModuleDestroy() {
     this.traceContextMap.clear();
   }
 }

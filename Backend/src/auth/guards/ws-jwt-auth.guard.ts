@@ -32,7 +32,7 @@ export class WsJwtAuthGuard implements CanActivate {
         `WebSocket authenticated: ${payload.sub || payload.userId || 'unknown'}`,
       );
       return true;
-    } catch (error) {
+    } catch {
       this.logger.warn(
         `WebSocket connection rejected: Invalid token from ${client.id}`,
       );

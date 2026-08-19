@@ -33,10 +33,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RateLimitGuard, RateLimit } from '../guards/rate-limit.guard';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '../../audit/audit.service';
-import {
-  InvalidSignatureError,
-  ApiErrorCode,
-} from '../../common/exceptions/api-error.exception';
+import { InvalidSignatureError } from '../../common/exceptions/api-error.exception';
 import { randomUUID as uuidv4 } from 'crypto';
 
 @ApiTags('Authentication')
@@ -156,7 +153,7 @@ export class AuthController {
     const message = `Sign this message to authenticate with Stellara: ${dto.nonce}`;
 
     // Verify signature
-    const isValid = await this.walletService.verifySignature(
+    const isValid = this.walletService.verifySignature(
       dto.publicKey,
       dto.signature,
       message,
@@ -223,7 +220,7 @@ export class AuthController {
     await this.walletService.updateLastUsed(dto.publicKey);
 
     // Generate tokens (refresh token seeds a rotation family)
-    const accessToken = await this.jwtAuthService.generateAccessToken(user.id);
+    const accessToken = this.jwtAuthService.generateAccessToken(user.id);
     const refreshTokenData = await this.jwtAuthService.generateRefreshToken(
       user.id,
     );
@@ -385,7 +382,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getCurrentUser(@Request() req) {
+  getCurrentUser(@Request() req) {
     return req.user;
   }
 
@@ -415,7 +412,7 @@ export class AuthController {
     const message = `Sign this message to authenticate with Stellara: ${dto.nonce}`;
 
     // Verify signature first — if it's invalid there is no point consuming a nonce
-    const isValid = await this.walletService.verifySignature(
+    const isValid = this.walletService.verifySignature(
       dto.publicKey,
       dto.signature,
       message,

@@ -7,8 +7,6 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { buildTypeOrmOptions } from './database/database.config';
-
 import { RedisModule } from './redis/redis.module';
 import { VoiceModule } from './voice/voice.module';
 import { StellarMonitorModule } from './stellar-monitor/stellar-monitor.module';

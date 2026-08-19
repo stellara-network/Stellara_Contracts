@@ -17,7 +17,7 @@ export class AuthHealthIndicator {
     private readonly configService: ConfigService,
   ) {}
 
-  async isHealthy(): Promise<AuthHealthCheckResult> {
+  isHealthy(): AuthHealthCheckResult {
     const start = Date.now();
     try {
       const secret = this.configService.get<string>('JWT_SECRET');

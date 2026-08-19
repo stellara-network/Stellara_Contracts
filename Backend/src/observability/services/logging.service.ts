@@ -102,7 +102,7 @@ export class LoggingService {
    */
   error(
     message: string,
-    error?: Error | any,
+    error?: any,
     context?: LogContext | Record<string, any>,
   ) {
     const meta = context || {};

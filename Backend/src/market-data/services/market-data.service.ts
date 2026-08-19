@@ -118,7 +118,7 @@ export class MarketDataService {
     }
 
     // Cache miss or bypassed: fetch synchronously
-    return this.fetchAndCacheSnapshot(cacheKey, assetFilter, bypassCache);
+    return this.fetchAndCacheSnapshot(cacheKey, assetFilter);
   }
 
   /**
@@ -225,7 +225,6 @@ export class MarketDataService {
   private async fetchAndCacheSnapshot(
     cacheKey: string,
     assetFilter?: string[],
-    bypassCache = false,
   ): Promise<MarketSnapshotDto> {
     if (this.isCircuitOpen()) {
       this.logger.warn('Circuit open — returning last-known-good or fallback');
@@ -305,15 +304,17 @@ export class MarketDataService {
     if (refreshLocks.get(cacheKey)) return; // Prevent stampede
     refreshLocks.set(cacheKey, true);
 
-    setImmediate(async () => {
-      try {
-        await this.fetchAndCacheSnapshot(cacheKey, assetFilter);
-        this.logger.debug(`Background refresh completed: ${cacheKey}`);
-      } catch (err) {
-        this.logger.error(`Background refresh failed: ${err.message}`);
-      } finally {
-        refreshLocks.delete(cacheKey);
-      }
+    setImmediate(() => {
+      void (async () => {
+        try {
+          await this.fetchAndCacheSnapshot(cacheKey, assetFilter);
+          this.logger.debug(`Background refresh completed: ${cacheKey}`);
+        } catch (err) {
+          this.logger.error(`Background refresh failed: ${err.message}`);
+        } finally {
+          refreshLocks.delete(cacheKey);
+        }
+      })();
     });
   }
 
@@ -325,15 +326,17 @@ export class MarketDataService {
     if (refreshLocks.get(cacheKey)) return;
     refreshLocks.set(cacheKey, true);
 
-    setImmediate(async () => {
-      try {
-        await this.fetchAndCacheAssetPrice(cacheKey, assetCode, issuer);
-        this.logger.debug(`Background price refresh completed: ${assetCode}`);
-      } catch (err) {
-        this.logger.error(`Background price refresh failed: ${err.message}`);
-      } finally {
-        refreshLocks.delete(cacheKey);
-      }
+    setImmediate(() => {
+      void (async () => {
+        try {
+          await this.fetchAndCacheAssetPrice(cacheKey, assetCode, issuer);
+          this.logger.debug(`Background price refresh completed: ${assetCode}`);
+        } catch (err) {
+          this.logger.error(`Background price refresh failed: ${err.message}`);
+        } finally {
+          refreshLocks.delete(cacheKey);
+        }
+      })();
     });
   }
 

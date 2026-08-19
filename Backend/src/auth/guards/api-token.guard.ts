@@ -26,7 +26,7 @@ export class ApiTokenGuard implements CanActivate {
         tokenId: tokenData.tokenId,
       };
       return true;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid API token');
     }
   }

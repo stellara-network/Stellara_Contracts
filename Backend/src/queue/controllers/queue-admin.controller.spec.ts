@@ -6,7 +6,6 @@ import { JobStatus } from '../types/job.types';
 
 describe('QueueAdminController', () => {
   let controller: QueueAdminController;
-  let queueService: QueueService;
 
   const mockQueueService = {
     getQueueStats: jest.fn(),
@@ -30,7 +29,6 @@ describe('QueueAdminController', () => {
     }).compile();
 
     controller = module.get<QueueAdminController>(QueueAdminController);
-    queueService = module.get<QueueService>(QueueService);
   });
 
   afterEach(() => {

@@ -24,7 +24,7 @@ export class QueueJobTracingWrapper {
    * Wrap job processor with tracing
    */
   wrapProcessor<T = any>(
-    processor: (job: Job<T>) => Promise<any> | any,
+    processor: (job: Job<T>) => any,
     jobName: string,
   ): (job: Job<T>) => Promise<any> {
     return async (job: Job<T>): Promise<any> => {
@@ -148,10 +148,11 @@ export class QueueJobTracingWrapper {
    * Wrap queue initialization with metrics tracking
    */
   wrapQueueMetrics(queue: Queue, queueName: string) {
-    const updateSize = () =>
-      queue.count().then((count) => {
+    const updateSize = () => {
+      void queue.count().then((count) => {
         this.metricsService.updateJobQueueSize(queueName, count);
       });
+    };
 
     queue.on('waiting', updateSize);
     queue.on('completed', updateSize);

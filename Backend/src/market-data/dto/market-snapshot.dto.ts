@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsArray,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 
 export class AssetPriceDto {
   @ApiProperty({ description: 'Asset code (e.g., XLM, USDC)' })

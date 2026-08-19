@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { VoiceModule } from './voice.module';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';

@@ -89,11 +89,7 @@ export class CacheInvalidationService {
 
       let invalidatedCount = 0;
 
-      if (event.namespace) {
-        invalidatedCount = await this.cacheService.invalidateNamespace(
-          event.namespace,
-        );
-      } else if (event.pattern && event.namespace) {
+      if (event.pattern && event.namespace) {
         invalidatedCount = await this.cacheService.invalidateByPattern(
           event.pattern,
           event.namespace,
@@ -101,6 +97,10 @@ export class CacheInvalidationService {
       } else if (event.keys && event.namespace) {
         invalidatedCount = await this.cacheService.invalidate(
           event.keys,
+          event.namespace,
+        );
+      } else if (event.namespace) {
+        invalidatedCount = await this.cacheService.invalidateNamespace(
           event.namespace,
         );
       }
@@ -120,7 +120,7 @@ export class CacheInvalidationService {
   }
 
   // Public trigger methods
-  async triggerAssetUpdate(
+  triggerAssetUpdate(
     assetCode: string,
     issuer: string,
     updateType: 'price' | 'metadata' | 'trustlines',
@@ -137,7 +137,7 @@ export class CacheInvalidationService {
     }
   }
 
-  async triggerNewsPublished() {
+  triggerNewsPublished() {
     try {
       this.eventEmitter.emit('news.published');
     } catch (error) {
@@ -145,7 +145,7 @@ export class CacheInvalidationService {
     }
   }
 
-  async triggerManualInvalidation(
+  triggerManualInvalidation(
     namespace?: CacheNamespace,
     keys?: string[],
     pattern?: string,

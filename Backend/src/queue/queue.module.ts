@@ -1,5 +1,5 @@
-import { Module, OnModuleInit, Inject } from '@nestjs/common';
-import { BullModule, InjectQueue, getQueueToken } from '@nestjs/bull';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { BullModule, InjectQueue } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QueueService } from './services/queue.service';
 import { QueueIdempotencyGuard } from './queue-idempotency.guard';
@@ -63,7 +63,7 @@ export class QueueModule implements OnModuleInit {
     private readonly indexMarketNewsQueue: Queue,
   ) {}
 
-  async onModuleInit() {
+  onModuleInit() {
     // Wrap queues for metrics
     this.queueJobTracingWrapper.wrapQueueMetrics(
       this.deployContractQueue,

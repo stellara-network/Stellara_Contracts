@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { VoiceSessionService } from './voice-session.service';
 import { LlmService } from './llm.service';
 import { ConversationState } from '../types/conversation-state.enum';

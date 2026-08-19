@@ -342,7 +342,7 @@ export class MetricsService {
     });
   }
 
-  getActiveWebSocketConnections(namespace: string): number {
+  getActiveWebSocketConnections(): number {
     return 0;
   }
 

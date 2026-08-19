@@ -1,4 +1,4 @@
-import { WorkflowDefinition, StepDefinition, WorkflowContext } from '../types';
+import { WorkflowDefinition, WorkflowContext } from '../types';
 import { WorkflowType } from '../types/workflow-type.enum';
 
 export const tradeExecutionWorkflow: WorkflowDefinition = {
@@ -17,7 +17,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           `Validating trade parameters for workflow: ${context.workflowId}`,
         );
 
-        const { tokenA, tokenB, amount, slippage } = input;
+        const { tokenA, tokenB, amount } = input;
 
         if (!tokenA || !tokenB || !amount) {
           throw new Error('Missing required trade parameters');
@@ -37,11 +37,12 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           gasEstimate: 150000,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating trade validation for workflow: ${context.workflowId}`,
         );
         // No compensation needed for validation
+        return Promise.resolve();
       },
     },
     {
@@ -51,7 +52,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
       execute: async (input: any, context: WorkflowContext) => {
         console.log(`Checking balance for workflow: ${context.workflowId}`);
 
-        const { tokenA, amount } = input;
+        const { amount } = input;
 
         // Simulate balance check
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -70,11 +71,12 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           checkedAt: new Date(),
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating balance check for workflow: ${context.workflowId}`,
         );
         // No compensation needed for balance check
+        return Promise.resolve();
       },
     },
     {
@@ -84,7 +86,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
       execute: async (input: any, context: WorkflowContext) => {
         console.log(`Executing trade for workflow: ${context.workflowId}`);
 
-        const { tokenA, tokenB, amount, slippage } = input;
+        const { amount, slippage } = input;
 
         // Simulate trade execution
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -103,7 +105,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           priceImpact: 0.02,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating trade execution for workflow: ${context.workflowId}`,
         );
@@ -112,6 +114,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           // In a real implementation, this would attempt to reverse the trade
           console.log(`Initiating reversal for trade ${output.tradeHash}`);
         }
+        return Promise.resolve();
       },
     },
     {
@@ -143,11 +146,12 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           confirmations: 1,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating transaction confirmation for workflow: ${context.workflowId}`,
         );
         // No compensation needed for confirmation
+        return Promise.resolve();
       },
     },
     {
@@ -157,7 +161,6 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
       execute: async (input: any, context: WorkflowContext) => {
         console.log(`Updating portfolio for workflow: ${context.workflowId}`);
 
-        const { tokenA, tokenB, amount } = input;
         const tradeOutput = context.metadata?.execute_trade;
         const confirmationOutput = context.metadata?.confirm_transaction;
 
@@ -176,7 +179,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           lastTradeHash: tradeOutput.tradeHash,
         };
       },
-      compensate: async (input: any, output: any, context: WorkflowContext) => {
+      compensate: (input: any, output: any, context: WorkflowContext) => {
         console.log(
           `Compensating portfolio update for workflow: ${context.workflowId}`,
         );
@@ -185,6 +188,7 @@ export const tradeExecutionWorkflow: WorkflowDefinition = {
           // Revert portfolio changes
           console.log(`Reverting portfolio changes for ${output.portfolioId}`);
         }
+        return Promise.resolve();
       },
     },
   ],

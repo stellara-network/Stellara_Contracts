@@ -5,7 +5,6 @@ import { CacheNamespace } from '../types/cache-config.types';
 
 describe('MarketCacheService', () => {
   let service: MarketCacheService;
-  let redisService: RedisService;
 
   const mockRedisClient = {
     get: jest.fn().mockResolvedValue(null),
@@ -33,7 +32,6 @@ describe('MarketCacheService', () => {
     }).compile();
 
     service = module.get<MarketCacheService>(MarketCacheService);
-    redisService = module.get<RedisService>(RedisService);
     jest.clearAllMocks();
   });
 

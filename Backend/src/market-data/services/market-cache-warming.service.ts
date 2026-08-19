@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { MarketDataService, TOP_ASSETS } from './market-data.service';
-import { CacheNamespace } from '../types/cache-config.types';
 import { MarketCacheService } from './market-cache.service';
 
 @Injectable()
@@ -64,11 +63,11 @@ export class MarketCacheWarmingService {
    * Run a forced cache warm on module init (after a brief delay so
    * the Horizon connection has time to stabilise on cold start).
    */
-  async onModuleInit(): Promise<void> {
+  onModuleInit(): void {
     // Delay the first warm by 5 seconds to allow dependencies to settle
-    setTimeout(async () => {
+    setTimeout(() => {
       this.logger.log('Performing initial cache warm on startup...');
-      await this.warmMarketCache();
+      void this.warmMarketCache();
     }, 5000);
   }
 
@@ -82,7 +81,7 @@ export class MarketCacheWarmingService {
   /**
    * Returns cache stats for the market snapshot namespace.
    */
-  async getWarmingStats(): Promise<{ isWarming: boolean; lastWarm?: Date }> {
+  getWarmingStats(): { isWarming: boolean; lastWarm?: Date } {
     return { isWarming: this.isWarming };
   }
 }

@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { NonceService } from './nonce.service';
 import { LoginNonce } from '../entities/login-nonce.entity';
 import { InvalidNonceError } from '../../common/exceptions/api-error.exception';
 
 describe('NonceService', () => {
   let service: NonceService;
-  let repository: Repository<LoginNonce>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -53,9 +52,6 @@ describe('NonceService', () => {
     }).compile();
 
     service = module.get<NonceService>(NonceService);
-    repository = module.get<Repository<LoginNonce>>(
-      getRepositoryToken(LoginNonce),
-    );
   });
 
   afterEach(() => {

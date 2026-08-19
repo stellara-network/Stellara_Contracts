@@ -8,7 +8,6 @@
  *   - Cron-based cache warming service instantiates
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import { MarketDataService, TOP_ASSETS } from './services/market-data.service';
 import { MarketCacheService } from './services/market-cache.service';
 import { HorizonMarketDataProvider } from './services/horizon-market-data-provider.service';
