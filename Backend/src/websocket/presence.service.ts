@@ -125,16 +125,26 @@ return 1
 @Injectable()
 export class PresenceService {
   private readonly logger = new Logger(PresenceService.name);
-  private readonly PRESENCE_TTL =
-    parseInt(process.env.PRESENCE_TTL_SECONDS || '300', 10);
-  private readonly ROOM_TTL =
-    parseInt(process.env.ROOM_TTL_SECONDS || '3600', 10);
-  private readonly HEARTBEAT_TTL =
-    parseInt(process.env.HEARTBEAT_TTL_SECONDS || '120', 10);
-  private readonly SOCKET_HEARTBEAT_TTL =
-    parseInt(process.env.SOCKET_HEARTBEAT_TTL_SECONDS || '180', 10);
-  private readonly ORPHAN_PURGE_INTERVAL_MS =
-    parseInt(process.env.ORPHAN_PURGE_INTERVAL_MS || '60000', 10);
+  private readonly PRESENCE_TTL = parseInt(
+    process.env.PRESENCE_TTL_SECONDS || '300',
+    10,
+  );
+  private readonly ROOM_TTL = parseInt(
+    process.env.ROOM_TTL_SECONDS || '3600',
+    10,
+  );
+  private readonly HEARTBEAT_TTL = parseInt(
+    process.env.HEARTBEAT_TTL_SECONDS || '120',
+    10,
+  );
+  private readonly SOCKET_HEARTBEAT_TTL = parseInt(
+    process.env.SOCKET_HEARTBEAT_TTL_SECONDS || '180',
+    10,
+  );
+  private readonly ORPHAN_PURGE_INTERVAL_MS = parseInt(
+    process.env.ORPHAN_PURGE_INTERVAL_MS || '60000',
+    10,
+  );
 
   constructor(private readonly redis: RedisService) {}
 
@@ -168,13 +178,7 @@ export class PresenceService {
     const version = await this.redis.evalScript<number>(
       LUA_CONNECT_SCRIPT,
       [socketsKey, onlineKey, versionKey, heartbeatKey],
-      [
-        socketId,
-        this.PRESENCE_TTL,
-        this.HEARTBEAT_TTL,
-        userId,
-        now,
-      ],
+      [socketId, this.PRESENCE_TTL, this.HEARTBEAT_TTL, userId, now],
     );
 
     // Track per-socket heartbeat for orphan detection (separate key with
@@ -270,11 +274,9 @@ export class PresenceService {
 
   async heartbeat(userId: string) {
     const heartbeatKey = this.key('user', userId, 'heartbeat');
-    await this.redis.client.set(
-      heartbeatKey,
-      Date.now().toString(),
-      { EX: this.HEARTBEAT_TTL },
-    );
+    await this.redis.client.set(heartbeatKey, Date.now().toString(), {
+      EX: this.HEARTBEAT_TTL,
+    });
   }
 
   /**
@@ -284,11 +286,9 @@ export class PresenceService {
    */
   async refreshSocketHeartbeat(socketId: string): Promise<void> {
     const socketHbKey = this.key('socket', socketId, 'lastSeen');
-    await this.redis.client.set(
-      socketHbKey,
-      Date.now().toString(),
-      { EX: this.SOCKET_HEARTBEAT_TTL },
-    );
+    await this.redis.client.set(socketHbKey, Date.now().toString(), {
+      EX: this.SOCKET_HEARTBEAT_TTL,
+    });
   }
 
   // ── Queries ────────────────────────────────────────────────────────────
@@ -320,9 +320,7 @@ export class PresenceService {
    * Check whether `userId` is in the online presence set.
    */
   async isUserOnline(userId: string): Promise<boolean> {
-    return (
-      (await this.redis.client.sIsMember('presence:online', userId)) === 1
-    );
+    return (await this.redis.client.sIsMember('presence:online', userId)) === 1;
   }
 
   // ── Orphan detection & stale cleanup ────────────────────────────────────

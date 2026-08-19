@@ -42,19 +42,29 @@ export class SecretsMaskingService {
    * Regex patterns that match secret-looking substrings.
    * Each entry is [pattern, safeReplacement].
    */
-  private static readonly SECRET_PATTERNS: ReadonlyArray<
-    [RegExp, string]
-  > = [
+  private static readonly SECRET_PATTERNS: ReadonlyArray<[RegExp, string]> = [
     // Bearer / JWT in Authorization headers
-    [/Bearer\s+[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]*/g, 'Bearer ***JWT***'],
+    [
+      /Bearer\s+[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]*/g,
+      'Bearer ***JWT***',
+    ],
     // Passwords embedded in connection URLs:  redis://:password@host or postgres://user:password@host
-    [/(redis|rediss|postgres|postgresql|mysql|mongodb|amqp):\/\/[^:@\s]*:[^@\s]+@/gi, '$1://***:***@'],
+    [
+      /(redis|rediss|postgres|postgresql|mysql|mongodb|amqp):\/\/[^:@\s]*:[^@\s]+@/gi,
+      '$1://***:***@',
+    ],
     // Query-string style secrets: ?token=xxx, &password=xxx, &secret=xxx
     [/([?&](token|secret|password|key|apikey|api_key)=)[^\s&"']+/gi, '$1***'],
     // JSON key-value pairs for common secret keys
-    [/("(?:password|secret|token|key|apiKey|api_key|Authorization)"\s*:\s*")[^"]*"/gi, '$1***"'],
+    [
+      /("(?:password|secret|token|key|apiKey|api_key|Authorization)"\s*:\s*")[^"]*"/gi,
+      '$1***"',
+    ],
     // Hex/base64 values that follow "secret", "token", "key" (case-insensitive)
-    [/\b(secret|token|password|key)\b\s*[:=]\s*['"]?[A-Za-z0-9+/=_\-]{8,}['"]?/gi, '$1=***'],
+    [
+      /\b(secret|token|password|key)\b\s*[:=]\s*['"]?[A-Za-z0-9+/=_\-]{8,}['"]?/gi,
+      '$1=***',
+    ],
   ];
 
   /**
@@ -77,7 +87,10 @@ export class SecretsMaskingService {
     }
 
     // 2. Apply structural regex patterns
-    for (const [pattern, replacement] of SecretsMaskingService.SECRET_PATTERNS) {
+    for (const [
+      pattern,
+      replacement,
+    ] of SecretsMaskingService.SECRET_PATTERNS) {
       output = output.replace(pattern, replacement);
     }
 

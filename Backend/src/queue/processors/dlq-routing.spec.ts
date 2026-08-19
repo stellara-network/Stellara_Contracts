@@ -3,6 +3,7 @@ import { getQueueToken } from '@nestjs/bull';
 import { DeployContractProcessor } from './deploy-contract.processor';
 import { ProcessTtsProcessor } from './process-tts.processor';
 import { IndexMarketNewsProcessor } from './index-market-news.processor';
+import { QueueJobTracingWrapper } from '../../observability/middleware/queue-job-tracing.wrapper';
 import {
   ValidationError,
   TransientError,
@@ -11,11 +12,7 @@ import {
 
 const makeDlqQueue = () => ({ add: jest.fn() });
 
-const makeJob = (
-  data: any,
-  attemptsMade = 3,
-  maxAttempts = 3,
-): any => ({
+const makeJob = (data: any, attemptsMade = 3, maxAttempts = 3): any => ({
   id: 'job-1',
   data,
   attemptsMade,
@@ -36,6 +33,10 @@ describe('DeployContractProcessor — DLQ routing', () => {
       providers: [
         DeployContractProcessor,
         { provide: getQueueToken('failed-jobs'), useValue: dlqQueue },
+        {
+          provide: QueueJobTracingWrapper,
+          useValue: { wrapProcessor: (fn: any) => fn },
+        },
       ],
     }).compile();
     processor = module.get(DeployContractProcessor);
@@ -51,7 +52,11 @@ describe('DeployContractProcessor — DLQ routing', () => {
   });
 
   it('routes to DLQ on PermanentError', async () => {
-    const job = makeJob({ contractName: 'C', contractCode: 'x', network: 'testnet' });
+    const job = makeJob({
+      contractName: 'C',
+      contractCode: 'x',
+      network: 'testnet',
+    });
     const err = new PermanentError('permanent failure');
     await processor.onFailed(job, err);
     expect(dlqQueue.add).toHaveBeenCalled();
@@ -84,6 +89,10 @@ describe('ProcessTtsProcessor — DLQ routing', () => {
       providers: [
         ProcessTtsProcessor,
         { provide: getQueueToken('failed-jobs'), useValue: dlqQueue },
+        {
+          provide: QueueJobTracingWrapper,
+          useValue: { wrapProcessor: (fn: any) => fn },
+        },
       ],
     }).compile();
     processor = module.get(ProcessTtsProcessor);
@@ -116,6 +125,10 @@ describe('IndexMarketNewsProcessor — DLQ routing', () => {
       providers: [
         IndexMarketNewsProcessor,
         { provide: getQueueToken('failed-jobs'), useValue: dlqQueue },
+        {
+          provide: QueueJobTracingWrapper,
+          useValue: { wrapProcessor: (fn: any) => fn },
+        },
       ],
     }).compile();
     processor = module.get(IndexMarketNewsProcessor);

@@ -102,7 +102,9 @@ describe('ConsumerManagementService', () => {
 
       await service.createConsumer(createDto);
 
-      expect(mockSecretService.encrypt).toHaveBeenCalledWith('my-signing-secret');
+      expect(mockSecretService.encrypt).toHaveBeenCalledWith(
+        'my-signing-secret',
+      );
       expect(mockConsumerRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ secret: 'enc:my-signing-secret' }),
       );
@@ -123,7 +125,7 @@ describe('ConsumerManagementService', () => {
     it('returns undefined when consumer has no secret', async () => {
       const consumer = new WebhookConsumer();
       consumer.id = 'consumer-1';
-      consumer.secret = undefined;
+      (consumer as any).secret = undefined;
       mockConsumerRepository.findOne.mockResolvedValue(consumer);
 
       const result = await service.getDecryptedSecret('consumer-1');

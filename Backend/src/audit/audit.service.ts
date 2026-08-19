@@ -218,10 +218,12 @@ export class AuditService {
     return a.id.localeCompare(b.id);
   }
 
-  private computeHash(entry: Pick<
-    AuditLogEntry,
-    'previousHash' | 'action_type' | 'actor_id' | 'timestamp'
-  >): string {
+  private computeHash(
+    entry: Pick<
+      AuditLogEntry,
+      'previousHash' | 'action_type' | 'actor_id' | 'timestamp'
+    >,
+  ): string {
     return createHash('sha256')
       .update(
         `${entry.previousHash}${entry.action_type}${entry.actor_id}${this.formatTimestamp(entry.timestamp)}`,

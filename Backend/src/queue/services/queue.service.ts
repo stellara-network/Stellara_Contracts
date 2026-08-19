@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue, Job } from 'bull';
-import { JobData, JobResult, JobStatus, JobInfo, RetryState } from '../types/job.types';
+import {
+  JobData,
+  JobResult,
+  JobStatus,
+  JobInfo,
+  RetryState,
+} from '../types/job.types';
 import { RedisService } from '../../redis/redis.service';
 import { QueueJobTracingWrapper } from '../../observability/middleware/queue-job-tracing.wrapper';
 import { TraceContext } from '../../observability/types/trace-context.interface';
@@ -80,7 +86,8 @@ export class QueueService {
         data as Record<string, any>,
       );
 
-      const isDuplicate = await this.idempotencyGuard.isDuplicate(idempotencyKey);
+      const isDuplicate =
+        await this.idempotencyGuard.isDuplicate(idempotencyKey);
       if (isDuplicate.isDuplicate) {
         this.logger.warn(
           `Duplicate job rejected: ${jobName} on ${queueName} (existing job: ${isDuplicate.jobId})`,
@@ -92,7 +99,10 @@ export class QueueService {
     // Inject trace context if parentTraceContext is provided
     let jobData = data;
     if (parentTraceContext) {
-      jobData = this.queueJobTracingWrapper.injectTraceContext(data, parentTraceContext);
+      jobData = this.queueJobTracingWrapper.injectTraceContext(
+        data,
+        parentTraceContext,
+      );
     }
 
     const job = await queue.add(jobName, jobData, {
@@ -145,7 +155,8 @@ export class QueueService {
 
     const state = await job.getState();
     const progress = job.progress();
-    const retryState = await this.getRetryState(job.id.toString()) || undefined;
+    const retryState =
+      (await this.getRetryState(job.id.toString())) || undefined;
 
     return {
       id: job.id.toString(),

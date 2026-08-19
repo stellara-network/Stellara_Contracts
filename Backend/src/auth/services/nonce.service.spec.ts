@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { NonceService } from './nonce.service';
 import { LoginNonce } from '../entities/login-nonce.entity';
-import { UnauthorizedException } from '@nestjs/common';
+import { InvalidNonceError } from '../../common/exceptions/api-error.exception';
 
 describe('NonceService', () => {
   let service: NonceService;
@@ -17,13 +17,37 @@ describe('NonceService', () => {
     delete: jest.fn(),
   };
 
+  // Repository returned by the transaction manager inside validateNonce()
+  const mockManagerRepo = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    createQueryBuilder: jest.fn(),
+  };
+
+  const mockManager = {
+    getRepository: jest.fn().mockReturnValue(mockManagerRepo),
+  };
+
+  const mockDataSource = {
+    transaction: jest.fn((callback: (manager: unknown) => Promise<unknown>) =>
+      callback(mockManager),
+    ),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+    mockManager.getRepository.mockReturnValue(mockManagerRepo);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NonceService,
         {
           provide: getRepositoryToken(LoginNonce),
           useValue: mockRepository,
+        },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
         },
       ],
     }).compile();
@@ -65,84 +89,105 @@ describe('NonceService', () => {
 
     it('should set expiration 5 minutes in the future', async () => {
       const publicKey = 'GABC123TEST';
-      const beforeTime = new Date();
-      beforeTime.setMinutes(beforeTime.getMinutes() + 4, 30);
+      const beforeTime = Date.now();
 
       mockRepository.create.mockImplementation((data) => data);
       mockRepository.save.mockImplementation((data) => Promise.resolve(data));
 
       const result = await service.generateNonce(publicKey);
-      const afterTime = new Date();
-      afterTime.setMinutes(afterTime.getMinutes() + 5, 30);
+      const fiveMinutesMs = 5 * 60 * 1000;
 
-      expect(result.expiresAt.getTime()).toBeGreaterThan(beforeTime.getTime());
-      expect(result.expiresAt.getTime()).toBeLessThan(afterTime.getTime());
+      const expiresInMs = result.expiresAt.getTime() - beforeTime;
+      expect(expiresInMs).toBeGreaterThanOrEqual(fiveMinutesMs);
+      expect(expiresInMs).toBeLessThan(fiveMinutesMs + 5000);
     });
   });
 
   describe('validateNonce', () => {
-    it('should validate a valid nonce', async () => {
-      const nonce = 'valid-nonce';
-      const publicKey = 'GABC123TEST';
+    const nonce = 'valid-nonce';
+    const publicKey = 'GABC123TEST';
+    const futureExpiry = () => new Date(Date.now() + 300000);
+
+    it('should validate a valid nonce and consume it atomically', async () => {
       const mockNonce = {
         id: '1',
         nonce,
         publicKey,
-        expiresAt: new Date(Date.now() + 300000),
+        expiresAt: futureExpiry(),
         used: false,
         createdAt: new Date(),
       };
 
-      mockRepository.findOne.mockResolvedValue(mockNonce);
+      mockManagerRepo.findOne.mockResolvedValue(mockNonce);
+
+      const queryBuilder = {
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        returning: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ raw: [mockNonce] }),
+      };
+      mockManagerRepo.createQueryBuilder.mockReturnValue(queryBuilder);
+      mockManagerRepo.create.mockReturnValue(mockNonce);
 
       const result = await service.validateNonce(nonce, publicKey);
 
       expect(result).toEqual(mockNonce);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
+      expect(mockDataSource.transaction).toHaveBeenCalled();
+      expect(mockManager.getRepository).toHaveBeenCalledWith(LoginNonce);
+      expect(mockManagerRepo.findOne).toHaveBeenCalledWith({
         where: { nonce, publicKey },
       });
+      expect(queryBuilder.execute).toHaveBeenCalled();
+    });
+
+    it('should throw error if nonce or public key is missing', async () => {
+      await expect(service.validateNonce('', publicKey)).rejects.toThrow(
+        InvalidNonceError,
+      );
+      expect(mockDataSource.transaction).not.toHaveBeenCalled();
     });
 
     it('should throw error if nonce not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
+      mockManagerRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.validateNonce('invalid-nonce', 'GABC123TEST'),
-      ).rejects.toThrow(UnauthorizedException);
+        service.validateNonce('invalid-nonce', publicKey),
+      ).rejects.toThrow(InvalidNonceError);
     });
 
     it('should throw error if nonce already used', async () => {
       const mockNonce = {
         id: '1',
         nonce: 'used-nonce',
-        publicKey: 'GABC123TEST',
-        expiresAt: new Date(Date.now() + 300000),
+        publicKey,
+        expiresAt: futureExpiry(),
         used: true,
         createdAt: new Date(),
       };
 
-      mockRepository.findOne.mockResolvedValue(mockNonce);
+      mockManagerRepo.findOne.mockResolvedValue(mockNonce);
 
       await expect(
-        service.validateNonce('used-nonce', 'GABC123TEST'),
-      ).rejects.toThrow(UnauthorizedException);
+        service.validateNonce('used-nonce', publicKey),
+      ).rejects.toThrow(InvalidNonceError);
     });
 
     it('should throw error if nonce expired', async () => {
       const mockNonce = {
         id: '1',
         nonce: 'expired-nonce',
-        publicKey: 'GABC123TEST',
+        publicKey,
         expiresAt: new Date(Date.now() - 1000),
         used: false,
         createdAt: new Date(),
       };
 
-      mockRepository.findOne.mockResolvedValue(mockNonce);
+      mockManagerRepo.findOne.mockResolvedValue(mockNonce);
 
       await expect(
-        service.validateNonce('expired-nonce', 'GABC123TEST'),
-      ).rejects.toThrow(UnauthorizedException);
+        service.validateNonce('expired-nonce', publicKey),
+      ).rejects.toThrow(InvalidNonceError);
     });
   });
 

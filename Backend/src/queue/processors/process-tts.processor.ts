@@ -23,16 +23,26 @@ export class ProcessTtsProcessor {
   constructor(
     @InjectQueue('failed-jobs') private readonly dlqQueue: Queue,
     private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
-    @Optional() @Inject(MetricsService) private readonly metrics?: MetricsService,
+    @Optional()
+    @Inject(MetricsService)
+    private readonly metrics?: MetricsService,
   ) {}
 
   @Process()
   async handleProcessTts(job: Job<ProcessTtsData>): Promise<JobResult> {
     const wrappedProcess = this.queueJobTracingWrapper.wrapProcessor(
       async (jobToProcess: Job<ProcessTtsData>) => {
-        const { text, voiceId, language = 'en', speed = 1.0, sessionId } = jobToProcess.data;
+        const {
+          text,
+          voiceId,
+          language = 'en',
+          speed = 1.0,
+          sessionId,
+        } = jobToProcess.data;
         const start = Date.now();
-        const correlationId = (jobToProcess.data as any)?.correlationId || 'process-tts-' + (jobToProcess as any).id;
+        const correlationId =
+          (jobToProcess.data as any)?.correlationId ||
+          'process-tts-' + (jobToProcess as any).id;
 
         this.logger.log(
           `Processing TTS job ${jobToProcess.id}: voiceId=${voiceId}, length=${text.length}`,
@@ -48,7 +58,9 @@ export class ProcessTtsProcessor {
           }
 
           if (text.length > 5000) {
-            throw new ValidationError('Text exceeds maximum length of 5000 characters');
+            throw new ValidationError(
+              'Text exceeds maximum length of 5000 characters',
+            );
           }
 
           this.logger.debug(`Processing TTS for voice ${voiceId}...`);
@@ -74,7 +86,11 @@ export class ProcessTtsProcessor {
           );
 
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobCompleted('process-tts', duration, correlationId);
+          this.metrics?.recordJobCompleted(
+            'process-tts',
+            duration,
+            correlationId,
+          );
 
           return {
             success: true,
@@ -90,8 +106,16 @@ export class ProcessTtsProcessor {
           };
         } catch (error) {
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobFailed('process-tts', duration, error.constructor.name, correlationId);
-          this.logger.error(`Failed to process TTS: ${error.message}`, error.stack);
+          this.metrics?.recordJobFailed(
+            'process-tts',
+            duration,
+            error.constructor.name,
+            correlationId,
+          );
+          this.logger.error(
+            `Failed to process TTS: ${error.message}`,
+            error.stack,
+          );
           throw error;
         }
       },

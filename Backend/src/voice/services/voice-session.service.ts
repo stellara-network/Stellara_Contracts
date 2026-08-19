@@ -78,7 +78,9 @@ export class VoiceSessionService implements OnModuleInit {
         ...session,
         createdAt: new Date(session.createdAt),
         lastActivityAt: new Date(session.lastActivityAt),
-        lastPingAt: session.lastPingAt ? new Date(session.lastPingAt) : undefined,
+        lastPingAt: session.lastPingAt
+          ? new Date(session.lastPingAt)
+          : undefined,
         messages: session.messages.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp),

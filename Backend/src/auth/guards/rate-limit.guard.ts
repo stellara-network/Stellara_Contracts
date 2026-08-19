@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RateLimitService } from '../services/rate-limit.service';
 import { RateLimitError } from '../../common/exceptions/api-error.exception';
@@ -54,7 +50,8 @@ export class RateLimitGuard implements CanActivate {
     const ip = request.ip || request.connection?.remoteAddress || 'unknown';
 
     // Establish the target route or function namespace identifier
-    const keyPrefix = options.keyPrefix || request.route?.path || context.getHandler().name;
+    const keyPrefix =
+      options.keyPrefix || request.route?.path || context.getHandler().name;
 
     // Execute atomic validation check matching the service signature: (ip, route, limit, windowSeconds)
     const result = await this.rateLimitService.checkRateLimit(

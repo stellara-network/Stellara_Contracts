@@ -42,21 +42,26 @@ export class WorkflowExecutionService {
     const version = definition.version || 1;
     const key = `${definition.type}:v${version}`;
     this.workflowDefinitions.set(key, definition);
-    
+
     // Track the latest version
     const latestKey = `${definition.type}:latest`;
     const currentLatest = this.workflowDefinitions.get(latestKey);
     if (!currentLatest || (currentLatest.version || 1) <= version) {
       this.workflowDefinitions.set(latestKey, definition);
     }
-    
-    this.logger.log(`Registered workflow definition: ${definition.type} v${version}`);
+
+    this.logger.log(
+      `Registered workflow definition: ${definition.type} v${version}`,
+    );
   }
 
   /**
    * Get workflow definition by type and optional version
    */
-  getWorkflowDefinition(type: string, version?: number): WorkflowDefinition | undefined {
+  getWorkflowDefinition(
+    type: string,
+    version?: number,
+  ): WorkflowDefinition | undefined {
     if (version !== undefined) {
       return this.workflowDefinitions.get(`${type}:v${version}`);
     }
@@ -175,7 +180,10 @@ export class WorkflowExecutionService {
    * Execute a workflow
    */
   async executeWorkflow(workflow: Workflow): Promise<void> {
-    const definition = this.getWorkflowDefinition(workflow.type, workflow.version);
+    const definition = this.getWorkflowDefinition(
+      workflow.type,
+      workflow.version,
+    );
     if (!definition) {
       throw new Error(
         `Workflow definition not found for type: ${workflow.type} v${workflow.version}`,
@@ -613,9 +621,11 @@ export class WorkflowExecutionService {
   /**
    * Serialize workflow definition (removes functions)
    */
-  private serializeDefinition(definition: WorkflowDefinition): Record<string, any> {
+  private serializeDefinition(
+    definition: WorkflowDefinition,
+  ): Record<string, any> {
     const serialized = { ...definition };
-    serialized.steps = serialized.steps.map(step => {
+    serialized.steps = serialized.steps.map((step) => {
       const { execute, compensate, ...rest } = step;
       return rest as any;
     });

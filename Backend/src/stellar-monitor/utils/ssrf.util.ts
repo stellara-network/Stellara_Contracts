@@ -12,7 +12,11 @@ import { lookup } from 'dns/promises';
  */
 
 /** Hostnames that always map to the local machine. */
-const BLOCKED_HOSTNAMES = new Set(['localhost', 'ip6-localhost', 'ip6-loopback']);
+const BLOCKED_HOSTNAMES = new Set([
+  'localhost',
+  'ip6-localhost',
+  'ip6-loopback',
+]);
 
 /**
  * Returns true if the given IP literal (v4 or v6) is private, loopback,
@@ -32,7 +36,10 @@ export function isPrivateIp(ip: string): boolean {
 
 function isPrivateIpv4(ip: string): boolean {
   const parts = ip.split('.').map((p) => parseInt(p, 10));
-  if (parts.length !== 4 || parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)) {
+  if (
+    parts.length !== 4 ||
+    parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)
+  ) {
     return true; // malformed — treat as unsafe
   }
   const [a, b] = parts;
@@ -69,7 +76,12 @@ function isPrivateIpv6(ip: string): boolean {
   // Unique local fc00::/7
   if (addr.startsWith('fc') || addr.startsWith('fd')) return true;
   // Link-local fe80::/10
-  if (addr.startsWith('fe8') || addr.startsWith('fe9') || addr.startsWith('fea') || addr.startsWith('feb')) {
+  if (
+    addr.startsWith('fe8') ||
+    addr.startsWith('fe9') ||
+    addr.startsWith('fea') ||
+    addr.startsWith('feb')
+  ) {
     return true;
   }
   // IPv4-mapped ::ffff:a.b.c.d — re-check embedded v4

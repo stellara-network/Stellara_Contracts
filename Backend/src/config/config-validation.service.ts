@@ -118,7 +118,9 @@ export class ConfigValidationService {
     // Stellar URL validation
     const horizonUrl = envVars.HORIZON_URL;
     if (horizonUrl && !horizonUrl.startsWith('http')) {
-      errors.push(`HORIZON_URL must start with http:// or https://, got "${horizonUrl}"`);
+      errors.push(
+        `HORIZON_URL must start with http:// or https://, got "${horizonUrl}"`,
+      );
     }
 
     const stellarRpcUrl = envVars.STELLAR_RPC_URL;
@@ -136,7 +138,9 @@ export class ConfigValidationService {
     // ── Log results ─────────────────────────────────────────────────────────
     if (errors.length > 0) {
       const safeMessages = this.maskingService.mask(errors.join('; '));
-      this.logger.error(`Configuration validation failed (${errors.length} error(s)): ${safeMessages}`);
+      this.logger.error(
+        `Configuration validation failed (${errors.length} error(s)): ${safeMessages}`,
+      );
       throw new Error(
         `Configuration validation failed: ${safeMessages}\n` +
           'Please check your environment variables. See .env.example for documentation.',
@@ -150,7 +154,7 @@ export class ConfigValidationService {
     }
 
     this.logger.log(
-      `Configuration validation passed (${Object.keys(envVars).filter(k => envVars[k] !== undefined).length} env vars checked)`,
+      `Configuration validation passed (${Object.keys(envVars).filter((k) => envVars[k] !== undefined).length} env vars checked)`,
     );
 
     return { success: true, errors, warnings };
@@ -162,33 +166,59 @@ export class ConfigValidationService {
   private buildEnvVarsMap(): Record<string, string | undefined> {
     const keys = [
       // Core
-      'NODE_ENV', 'PORT',
+      'NODE_ENV',
+      'PORT',
       // Auth
-      'JWT_SECRET', 'JWT_ACCESS_EXPIRATION', 'JWT_REFRESH_EXPIRATION',
+      'JWT_SECRET',
+      'JWT_ACCESS_EXPIRATION',
+      'JWT_REFRESH_EXPIRATION',
       // Database
-      'DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE',
+      'DB_HOST',
+      'DB_PORT',
+      'DB_USERNAME',
+      'DB_PASSWORD',
+      'DB_DATABASE',
       // Redis
-      'REDIS_URL', 'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD', 'REDIS_QUEUE_DB',
+      'REDIS_URL',
+      'REDIS_HOST',
+      'REDIS_PORT',
+      'REDIS_PASSWORD',
+      'REDIS_QUEUE_DB',
       // Queue
-      'QUEUE_DEPLOY_CONTRACT_CONCURRENCY', 'QUEUE_PROCESS_TTS_CONCURRENCY',
-      'QUEUE_INDEX_MARKET_NEWS_CONCURRENCY', 'QUEUE_DEFAULT_ATTEMPTS',
-      'QUEUE_DEFAULT_BACKOFF_DELAY', 'QUEUE_KEEP_COMPLETED_JOBS',
-      'QUEUE_KEEP_FAILED_JOBS', 'QUEUE_DEBUG_LOGGING', 'QUEUE_EVENT_TRACKING',
+      'QUEUE_DEPLOY_CONTRACT_CONCURRENCY',
+      'QUEUE_PROCESS_TTS_CONCURRENCY',
+      'QUEUE_INDEX_MARKET_NEWS_CONCURRENCY',
+      'QUEUE_DEFAULT_ATTEMPTS',
+      'QUEUE_DEFAULT_BACKOFF_DELAY',
+      'QUEUE_KEEP_COMPLETED_JOBS',
+      'QUEUE_KEEP_FAILED_JOBS',
+      'QUEUE_DEBUG_LOGGING',
+      'QUEUE_EVENT_TRACKING',
       'QUEUE_DLQ_RETENTION_DAYS',
       // Stellar
-      'HORIZON_URL', 'STELLAR_RPC_URL', 'STELLAR_NETWORK_PASSPHRASE',
+      'HORIZON_URL',
+      'STELLAR_RPC_URL',
+      'STELLAR_NETWORK_PASSPHRASE',
       'STELLAR_MONITOR_ENABLED',
       // Webhook
       'WEBHOOK_SECRET_KEY',
       // Secrets
-      'VAULT_ENABLED', 'VAULT_ADDR', 'VAULT_NAMESPACE', 'VAULT_TOKEN',
+      'VAULT_ENABLED',
+      'VAULT_ADDR',
+      'VAULT_NAMESPACE',
+      'VAULT_TOKEN',
       'AWS_SECRETS_MANAGER_ENABLED',
       // Rate limiting
-      'RATE_LIMIT_LOGIN', 'RATE_LIMIT_REFRESH', 'RATE_LIMIT_API', 'RATE_LIMIT_WINDOW',
+      'RATE_LIMIT_LOGIN',
+      'RATE_LIMIT_REFRESH',
+      'RATE_LIMIT_API',
+      'RATE_LIMIT_WINDOW',
       // External
-      'LLM_API_KEY', 'LLM_BASE_URL',
+      'LLM_API_KEY',
+      'LLM_BASE_URL',
       // Swagger / Debug
-      'SWAGGER_ENABLED', 'DEBUG',
+      'SWAGGER_ENABLED',
+      'DEBUG',
       // CORS
       'CORS_ORIGINS',
     ];
@@ -212,7 +242,11 @@ export class ConfigValidationService {
     const dbPassword = envVars.DB_PASSWORD;
 
     // Check for default/weak secrets in production
-    const weakSecrets: Array<{ name: string; value: string | undefined; label: string }> = [
+    const weakSecrets: Array<{
+      name: string;
+      value: string | undefined;
+      label: string;
+    }> = [
       { name: 'JWT_SECRET', value: jwtSecret, label: 'JWT_SECRET' },
       { name: 'DB_PASSWORD', value: dbPassword, label: 'DB_PASSWORD' },
     ];

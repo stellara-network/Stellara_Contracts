@@ -31,7 +31,9 @@ export class IndexMarketNewsProcessor {
   constructor(
     @InjectQueue('failed-jobs') private readonly dlqQueue: Queue,
     private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
-    @Optional() @Inject(MetricsService) private readonly metrics?: MetricsService,
+    @Optional()
+    @Inject(MetricsService)
+    private readonly metrics?: MetricsService,
   ) {}
 
   @Process()
@@ -42,7 +44,9 @@ export class IndexMarketNewsProcessor {
       async (jobToProcess: Job<IndexMarketNewsData>) => {
         const { source, startDate, endDate, limit = 100 } = jobToProcess.data;
         const start = Date.now();
-        const correlationId = (jobToProcess.data as any)?.correlationId || 'index-market-news-' + (jobToProcess as any).id;
+        const correlationId =
+          (jobToProcess.data as any)?.correlationId ||
+          'index-market-news-' + (jobToProcess as any).id;
 
         this.logger.log(
           `Processing index-market-news job ${jobToProcess.id}: source=${source}, limit=${limit}`,
@@ -60,7 +64,12 @@ export class IndexMarketNewsProcessor {
           this.logger.debug(`Fetching market news from ${source}...`);
           await jobToProcess.progress(20);
 
-          const newsItems = await this.fetchNews(source, startDate, endDate, limit);
+          const newsItems = await this.fetchNews(
+            source,
+            startDate,
+            endDate,
+            limit,
+          );
           await jobToProcess.progress(50);
 
           const enrichedNews = await this.enrichNews(newsItems);
@@ -74,7 +83,11 @@ export class IndexMarketNewsProcessor {
           );
 
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobCompleted('index-market-news', duration, correlationId);
+          this.metrics?.recordJobCompleted(
+            'index-market-news',
+            duration,
+            correlationId,
+          );
 
           return {
             success: true,
@@ -88,7 +101,12 @@ export class IndexMarketNewsProcessor {
           };
         } catch (error) {
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobFailed('index-market-news', duration, error.constructor.name, correlationId);
+          this.metrics?.recordJobFailed(
+            'index-market-news',
+            duration,
+            error.constructor.name,
+            correlationId,
+          );
           this.logger.error(
             `Failed to index market news: ${error.message}`,
             error.stack,

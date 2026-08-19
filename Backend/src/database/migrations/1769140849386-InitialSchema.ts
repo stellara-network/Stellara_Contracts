@@ -133,19 +133,41 @@ export class InitialSchema1769140849386 implements MigrationInterface {
     await queryRunner.query(
       `DROP INDEX "public"."IDX_ff0223ec6b4d2088d80a275370"`,
     );
-    await queryRunner.query(`DROP INDEX "public"."IDX_f33cdaaaeb7d011cd9167d45de"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_842c30a1d102e48a388b3de116"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_3297c60e536613d9a6984b5466"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_9f76c9efc1e76d48e01f8eebe9"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_f8d00fffa3b5110edf867481dd"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_b6f5c1c7a4a8adaed3728b05d3"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_56e937f62e6766e06118ae9b6c"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f33cdaaaeb7d011cd9167d45de"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_842c30a1d102e48a388b3de116"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_3297c60e536613d9a6984b5466"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_9f76c9efc1e76d48e01f8eebe9"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f8d00fffa3b5110edf867481dd"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_b6f5c1c7a4a8adaed3728b05d3"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_56e937f62e6766e06118ae9b6c"`,
+    );
     await queryRunner.query(`DROP TABLE "stellar_events"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_f9a012d6f30c9ad8e5f5d8c6d6"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_2b2d74b0fecc64757b033373ca"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_60519c0ef4651ab9ce331d47ed"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f9a012d6f30c9ad8e5f5d8c6d6"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_2b2d74b0fecc64757b033373ca"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_60519c0ef4651ab9ce331d47ed"`,
+    );
     await queryRunner.query(`DROP TABLE "webhook_consumers"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_ai_usage_quota_userId_month"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_ai_usage_quota_userId_month"`,
+    );
     await queryRunner.query(`DROP TABLE "ai_usage_quota"`);
     await queryRunner.query(`DROP INDEX "public"."IDX_voice_sessions_userId"`);
     await queryRunner.query(`DROP TABLE "voice_sessions"`);
@@ -164,14 +186,26 @@ export class InitialSchema1769140849386 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "workflow_steps" DROP CONSTRAINT "FK_eb0c057661503827a7cd6d8ea41"`,
     );
-    await queryRunner.query(`DROP INDEX "public"."IDX_eb0c057661503827a7cd6d8ea4"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_5a56ecdb592cc9ed1924cd56eb"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_eb0c057661503827a7cd6d8ea4"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_5a56ecdb592cc9ed1924cd56eb"`,
+    );
     await queryRunner.query(`DROP TYPE "public"."workflow_steps_state_enum"`);
     await queryRunner.query(`DROP TABLE "workflow_steps"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_619a202a61b92e73f20de8d29e"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_98afa5ee1ac04e690c908bbf85"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_15206576633d3e612da44c882d"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_e6b7312458454123287286afa6"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_619a202a61b92e73f20de8d29e"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_98afa5ee1ac04e690c908bbf85"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_15206576633d3e612da44c882d"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_e6b7312458454123287286afa6"`,
+    );
     await queryRunner.query(`DROP TABLE "workflows"`);
     await queryRunner.query(`DROP TYPE "public"."workflows_state_enum"`);
     await queryRunner.query(`DROP TYPE "public"."workflows_type_enum"`);

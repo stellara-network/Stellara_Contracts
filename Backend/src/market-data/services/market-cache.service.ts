@@ -103,14 +103,21 @@ export class MarketCacheService {
   async getMetadata(
     key: string,
     namespace: CacheNamespace,
-  ): Promise<{ createdAt: number; freshnessTtl: number; namespace: string } | null> {
+  ): Promise<{
+    createdAt: number;
+    freshnessTtl: number;
+    namespace: string;
+  } | null> {
     try {
       const cacheKey = this.generateCacheKey(key, namespace);
       const raw = await this.redisService.client.get(`${cacheKey}:metadata`);
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (error) {
-      this.logger.error(`Error getting metadata: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting metadata: ${error.message}`,
+        error.stack,
+      );
       return null;
     }
   }

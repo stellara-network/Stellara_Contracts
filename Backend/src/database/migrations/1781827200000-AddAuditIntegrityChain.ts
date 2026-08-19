@@ -1,9 +1,7 @@
 import { createHash, createHmac } from 'crypto';
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddAuditIntegrityChain1781827200000
-  implements MigrationInterface
-{
+export class AddAuditIntegrityChain1781827200000 implements MigrationInterface {
   name = 'AddAuditIntegrityChain1781827200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

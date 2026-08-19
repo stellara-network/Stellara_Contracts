@@ -29,7 +29,10 @@ export class AuthHealthIndicator {
         };
       }
 
-      const testPayload = { sub: '__health_check__', iat: Math.floor(Date.now() / 1000) };
+      const testPayload = {
+        sub: '__health_check__',
+        iat: Math.floor(Date.now() / 1000),
+      };
       const token = this.jwtService.sign(testPayload, { expiresIn: '1s' });
       this.jwtService.verify(token);
 

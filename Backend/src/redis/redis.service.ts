@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { createClient, RedisClientType } from 'redis';
 import { SecretsMaskingService } from '../config/secrets-masking.service';
 import { SecretsRotationService } from '../config/secrets-rotation.service';
@@ -22,12 +27,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     // Register rotation hook: if REDIS_URL or REDIS_PASSWORD changes at
     // runtime, gracefully reconnect all three clients with the new credential.
     this.rotationService.onRotation('REDIS_URL', async (evt) => {
-      this.logger.log(`REDIS_URL rotated (${evt.reason ?? 'manual'}); reconnecting Redis clients…`);
+      this.logger.log(
+        `REDIS_URL rotated (${evt.reason ?? 'manual'}); reconnecting Redis clients…`,
+      );
       await this.reconnect();
     });
 
     this.rotationService.onRotation('REDIS_PASSWORD', async (evt) => {
-      this.logger.log(`REDIS_PASSWORD rotated (${evt.reason ?? 'manual'}); reconnecting Redis clients…`);
+      this.logger.log(
+        `REDIS_PASSWORD rotated (${evt.reason ?? 'manual'}); reconnecting Redis clients…`,
+      );
       await this.reconnect();
     });
   }
@@ -53,13 +62,19 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     // Attach error listeners that always log masked messages
     this.client.on('error', (err: Error) => {
-      this.logger.error(`Redis client error: ${this.maskingService.mask(err.message)}`);
+      this.logger.error(
+        `Redis client error: ${this.maskingService.mask(err.message)}`,
+      );
     });
     this.pubClient.on('error', (err: Error) => {
-      this.logger.error(`Redis pubClient error: ${this.maskingService.mask(err.message)}`);
+      this.logger.error(
+        `Redis pubClient error: ${this.maskingService.mask(err.message)}`,
+      );
     });
     this.subClient.on('error', (err: Error) => {
-      this.logger.error(`Redis subClient error: ${this.maskingService.mask(err.message)}`);
+      this.logger.error(
+        `Redis subClient error: ${this.maskingService.mask(err.message)}`,
+      );
     });
 
     try {
@@ -188,7 +203,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
         delPipeline.del(k);
       }
       await delPipeline.exec();
-      this.logger.debug(`Purged ${stale.length} stale keys matching ${pattern}`);
+      this.logger.debug(
+        `Purged ${stale.length} stale keys matching ${pattern}`,
+      );
     }
 
     return stale;

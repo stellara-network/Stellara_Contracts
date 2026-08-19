@@ -57,7 +57,9 @@ export class MarketSnapshotDto {
   @IsOptional()
   cached?: boolean;
 
-  @ApiPropertyOptional({ description: 'Data freshness status (e.g., fresh, stale)' })
+  @ApiPropertyOptional({
+    description: 'Data freshness status (e.g., fresh, stale)',
+  })
   @IsOptional()
   @IsString()
   dataFreshness?: string;

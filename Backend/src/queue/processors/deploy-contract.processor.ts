@@ -22,7 +22,9 @@ export class DeployContractProcessor {
   constructor(
     @InjectQueue('failed-jobs') private readonly dlqQueue: Queue,
     private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
-    @Optional() @Inject(MetricsService) private readonly metrics?: MetricsService,
+    @Optional()
+    @Inject(MetricsService)
+    private readonly metrics?: MetricsService,
   ) {}
 
   @Process()
@@ -30,9 +32,12 @@ export class DeployContractProcessor {
     // Wrap the actual processing in the tracing wrapper
     const wrappedProcess = this.queueJobTracingWrapper.wrapProcessor(
       async (jobToProcess: Job<DeployContractData>) => {
-        const { contractName, contractCode, network, initializer } = jobToProcess.data;
+        const { contractName, contractCode, network, initializer } =
+          jobToProcess.data;
         const start = Date.now();
-        const correlationId = (jobToProcess.data as any)?.correlationId || 'deploy-contract-' + (jobToProcess as any).id;
+        const correlationId =
+          (jobToProcess.data as any)?.correlationId ||
+          'deploy-contract-' + (jobToProcess as any).id;
 
         this.logger.log(
           `Processing deploy-contract job ${jobToProcess.id}: ${contractName} on ${network}`,
@@ -54,7 +59,9 @@ export class DeployContractProcessor {
 
           const compilationResult = await this.compileContract(contractCode);
           if (!compilationResult.success) {
-            throw new TransientError(`Compilation failed: ${compilationResult.error}`);
+            throw new TransientError(
+              `Compilation failed: ${compilationResult.error}`,
+            );
           }
 
           await jobToProcess.progress(50);
@@ -76,7 +83,11 @@ export class DeployContractProcessor {
           await jobToProcess.progress(100);
 
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobCompleted('deploy-contract', duration, correlationId);
+          this.metrics?.recordJobCompleted(
+            'deploy-contract',
+            duration,
+            correlationId,
+          );
 
           return {
             success: true,
@@ -90,7 +101,12 @@ export class DeployContractProcessor {
           };
         } catch (error) {
           const duration = (Date.now() - start) / 1000;
-          this.metrics?.recordJobFailed('deploy-contract', duration, error.constructor.name, correlationId);
+          this.metrics?.recordJobFailed(
+            'deploy-contract',
+            duration,
+            error.constructor.name,
+            correlationId,
+          );
           this.logger.error(
             `Failed to deploy contract: ${error.message}`,
             error.stack,

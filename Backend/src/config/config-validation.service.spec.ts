@@ -39,7 +39,8 @@ describe('ConfigValidationService', () => {
     STELLAR_RPC_URL: 'https://horizon-testnet.stellar.org',
     STELLAR_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015',
     STELLAR_MONITOR_ENABLED: 'true',
-    WEBHOOK_SECRET_KEY: '0000000000000000000000000000000000000000000000000000000000000000',
+    WEBHOOK_SECRET_KEY:
+      '0000000000000000000000000000000000000000000000000000000000000000',
     VAULT_ENABLED: 'true',
     VAULT_ADDR: 'http://localhost:8200',
     VAULT_NAMESPACE: 'kv',
@@ -107,7 +108,9 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow('Configuration validation failed');
+        expect(() => service.validate()).toThrow(
+          'Configuration validation failed',
+        );
       });
 
       it('should throw when DB_HOST is missing', () => {
@@ -116,7 +119,9 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow('Configuration validation failed');
+        expect(() => service.validate()).toThrow(
+          'Configuration validation failed',
+        );
       });
 
       it('should throw when DB_PASSWORD is missing', () => {
@@ -125,7 +130,9 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow('Configuration validation failed');
+        expect(() => service.validate()).toThrow(
+          'Configuration validation failed',
+        );
       });
 
       it('should throw when both REDIS_URL and REDIS_HOST are missing', () => {
@@ -138,9 +145,7 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow(
-          'Redis configuration missing',
-        );
+        expect(() => service.validate()).toThrow('Redis configuration missing');
       });
 
       it('should pass when REDIS_HOST is set instead of REDIS_URL', () => {
@@ -164,7 +169,9 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow('DB_PORT must be between 1 and 65535');
+        expect(() => service.validate()).toThrow(
+          'DB_PORT must be between 1 and 65535',
+        );
       });
 
       it('should throw for invalid PORT (out of range)', () => {
@@ -173,7 +180,9 @@ describe('ConfigValidationService', () => {
           (key: string) => envVars[key],
         );
 
-        expect(() => service.validate()).toThrow('PORT must be between 1 and 65535');
+        expect(() => service.validate()).toThrow(
+          'PORT must be between 1 and 65535',
+        );
       });
 
       it('should throw for invalid REDIS_PORT (out of range)', () => {
@@ -215,7 +224,10 @@ describe('ConfigValidationService', () => {
       });
 
       it('should accept redis:// URL', () => {
-        const envVars = { ...validEnvVars, REDIS_URL: 'redis://localhost:6379' };
+        const envVars = {
+          ...validEnvVars,
+          REDIS_URL: 'redis://localhost:6379',
+        };
         (configService.get as jest.Mock).mockImplementation(
           (key: string) => envVars[key],
         );
@@ -224,7 +236,10 @@ describe('ConfigValidationService', () => {
       });
 
       it('should accept rediss:// URL', () => {
-        const envVars = { ...validEnvVars, REDIS_URL: 'rediss://localhost:6379' };
+        const envVars = {
+          ...validEnvVars,
+          REDIS_URL: 'rediss://localhost:6379',
+        };
         (configService.get as jest.Mock).mockImplementation(
           (key: string) => envVars[key],
         );
@@ -498,7 +513,9 @@ describe('ConfigValidationService', () => {
 
         const result = service.validate();
         expect(result.warnings.length).toBeGreaterThan(0);
-        expect(result.warnings.some((w) => w.includes('VAULT_ENABLED'))).toBe(true);
+        expect(result.warnings.some((w) => w.includes('VAULT_ENABLED'))).toBe(
+          true,
+        );
       });
     });
 
@@ -520,13 +537,11 @@ describe('ConfigValidationService', () => {
 
     describe('secrets masking', () => {
       it('should mask secret values in error messages', () => {
-        (configService.get as jest.Mock).mockImplementation(
-          (key: string) => {
-            if (key === 'JWT_SECRET') return 'super-secret-value';
-            if (key === 'DB_PASSWORD') return 'db-password-value';
-            return validEnvVars[key];
-          },
-        );
+        (configService.get as jest.Mock).mockImplementation((key: string) => {
+          if (key === 'JWT_SECRET') return 'super-secret-value';
+          if (key === 'DB_PASSWORD') return 'db-password-value';
+          return validEnvVars[key];
+        });
 
         service.validate();
         // The masking service should have been called during validation

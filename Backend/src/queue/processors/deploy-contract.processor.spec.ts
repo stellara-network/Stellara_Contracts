@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bull';
 import { DeployContractProcessor } from './deploy-contract.processor';
+import { QueueJobTracingWrapper } from '../../observability/middleware/queue-job-tracing.wrapper';
 
 describe('DeployContractProcessor', () => {
   let processor: DeployContractProcessor;
@@ -26,6 +27,12 @@ describe('DeployContractProcessor', () => {
       providers: [
         DeployContractProcessor,
         { provide: getQueueToken('failed-jobs'), useValue: { add: jest.fn() } },
+        {
+          provide: QueueJobTracingWrapper,
+          useValue: {
+            wrapProcessor: jest.fn().mockImplementation((fn: any) => fn),
+          },
+        },
       ],
     }).compile();
 

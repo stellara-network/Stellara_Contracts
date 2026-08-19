@@ -152,14 +152,24 @@ export class InitFullSchema1783000000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE IF EXISTS "ai_usage_quota"`);
-    await queryRunner.query(`DROP UNIQUE INDEX IF EXISTS "IDX_ai_usage_quota_user_month"`);
+    await queryRunner.query(
+      `DROP UNIQUE INDEX IF EXISTS "IDX_ai_usage_quota_user_month"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "voice_sessions"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_voice_sessions_userId"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "voice_jobs"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_voice_jobs_status_createdAt"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_voice_jobs_userId_createdAt"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."conversation_state_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."feature_context_enum"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_voice_jobs_status_createdAt"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_voice_jobs_userId_createdAt"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."conversation_state_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."feature_context_enum"`,
+    );
     await queryRunner.query(`DROP TYPE IF EXISTS "public"."job_status_enum"`);
     await queryRunner.query(`DROP TYPE IF EXISTS "public"."job_type_enum"`);
 
@@ -169,7 +179,9 @@ export class InitFullSchema1783000000000 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_refresh_tokens_userId"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "login_nonces"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "wallet_bindings"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_wallet_bindings_userId"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_wallet_bindings_userId"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
   }
 }

@@ -9,8 +9,6 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { getModelToken } from '@nestjs/mongoose';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MarketDataService, TOP_ASSETS } from './services/market-data.service';
 import { MarketCacheService } from './services/market-cache.service';
 import { HorizonMarketDataProvider } from './services/horizon-market-data-provider.service';
@@ -61,7 +59,9 @@ const mockCacheService: Partial<MarketCacheService> = {
 // Mocked Horizon provider
 // ---------------------------------------------------------------------------
 const mockGetOrderbook = jest.fn().mockResolvedValue(MOCK_XLM_ORDERBOOK);
-const mockGetRecentTrades = jest.fn().mockResolvedValue(MOCK_TRADE_AGGREGATIONS);
+const mockGetRecentTrades = jest
+  .fn()
+  .mockResolvedValue(MOCK_TRADE_AGGREGATIONS);
 const mockGetAssetStats = jest.fn().mockResolvedValue({});
 
 const mockHorizonProvider: Partial<HorizonMarketDataProvider> = {
@@ -176,7 +176,9 @@ describe('MarketDataService — Horizon Integration', () => {
 
     it('should gracefully degrade to last-known-good when Horizon fails', async () => {
       const lkgSnapshot = {
-        assets: [{ code: 'XLM', priceUSD: 0.1, dataFreshness: 'last_known_good' }],
+        assets: [
+          { code: 'XLM', priceUSD: 0.1, dataFreshness: 'last_known_good' },
+        ],
         source: 'Stellar Horizon DEX',
         timestamp: new Date(),
         cached: true,
@@ -205,7 +207,8 @@ describe('MarketDataService — Horizon Integration', () => {
           { provide: HorizonMarketDataProvider, useValue: mockHorizonProvider },
         ],
       }).compile();
-      const freshService = freshModule.get<MarketDataService>(MarketDataService);
+      const freshService =
+        freshModule.get<MarketDataService>(MarketDataService);
 
       mockGetOrderbook.mockRejectedValueOnce(new Error('Horizon down'));
       mockGetOrderbook.mockRejectedValueOnce(new Error('Horizon down'));
@@ -318,7 +321,9 @@ describe('MarketCacheWarmingService', () => {
       ],
     }).compile();
 
-    warmingService = module.get<MarketCacheWarmingService>(MarketCacheWarmingService);
+    warmingService = module.get<MarketCacheWarmingService>(
+      MarketCacheWarmingService,
+    );
   });
 
   it('should be defined', () => {

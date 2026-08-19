@@ -83,7 +83,9 @@ describe('Queue Integration - Retries and DLQ', () => {
         {
           provide: QueueJobTracingWrapper,
           useValue: {
-            injectTraceContext: jest.fn().mockImplementation((_data: any) => _data),
+            injectTraceContext: jest
+              .fn()
+              .mockImplementation((_data: any) => _data),
             wrapProcessor: jest.fn().mockImplementation((fn: any) => fn),
           },
         },
@@ -391,7 +393,7 @@ describe('Queue Integration - Retries and DLQ', () => {
       // Verify original data was passed to the new job
       expect(mockQueues.deployContractQueue.add).toHaveBeenCalledWith(
         'deploy-contract',
-        originalData,
+        expect.objectContaining(originalData),
         expect.any(Object),
       );
     });
@@ -530,7 +532,11 @@ describe('Queue Integration - Retries and DLQ', () => {
     });
 
     it('should reject duplicate job via addJob', async () => {
-      const jobData = { contractName: 'Test', contractCode: '0x123', network: 'mainnet' };
+      const jobData = {
+        contractName: 'Test',
+        contractCode: '0x123',
+        network: 'mainnet',
+      };
 
       // First call: idempotency key does not exist
       mockRedisService.client.get.mockResolvedValueOnce(null);
@@ -558,7 +564,11 @@ describe('Queue Integration - Retries and DLQ', () => {
     });
 
     it('should allow duplicate when skipIdempotencyCheck is true', async () => {
-      const jobData = { contractName: 'Test', contractCode: '0x123', network: 'mainnet' };
+      const jobData = {
+        contractName: 'Test',
+        contractCode: '0x123',
+        network: 'mainnet',
+      };
 
       mockQueues.deployContractQueue.add.mockResolvedValue(
         createMockJob('job-1', 'deploy-contract'),

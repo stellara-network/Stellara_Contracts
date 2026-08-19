@@ -144,7 +144,7 @@ describe('WorkflowService', () => {
       expect(result).toEqual(expectedWorkflow);
       expect(mockWorkflowRepository.findOne).toHaveBeenCalledWith({
         where: { id: workflowId },
-        relations: ['steps'],
+        relations: { steps: true },
       });
     });
 
@@ -175,7 +175,7 @@ describe('WorkflowService', () => {
       expect(result).toEqual({ workflows: expectedWorkflows, total: 2 });
       expect(mockWorkflowRepository.findAndCount).toHaveBeenCalledWith({
         where: { userId },
-        relations: ['steps'],
+        relations: { steps: true },
         order: { createdAt: 'DESC' },
         skip: 0,
         take: 20,
@@ -203,7 +203,7 @@ describe('WorkflowService', () => {
           state: WorkflowState.FAILED,
           retryCount: 0,
         },
-        relations: ['steps'],
+        relations: { steps: true },
         order: { failedAt: 'DESC' },
       });
     });

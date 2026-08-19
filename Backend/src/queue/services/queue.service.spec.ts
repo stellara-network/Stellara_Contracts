@@ -61,7 +61,9 @@ describe('QueueService', () => {
         {
           provide: QueueJobTracingWrapper,
           useValue: {
-            injectTraceContext: jest.fn().mockImplementation((_data: any) => _data),
+            injectTraceContext: jest
+              .fn()
+              .mockImplementation((_data: any) => _data),
             wrapProcessor: jest.fn().mockImplementation((fn: any) => fn),
           },
         },
@@ -301,7 +303,7 @@ describe('QueueService', () => {
 
   describe('purgeQueue', () => {
     it('should purge failed jobs from queue', async () => {
-      mockQueue.clean.mockResolvedValue(10);
+      mockQueue.clean.mockResolvedValue(new Array(10).fill({ id: 'x' }));
 
       const result = await service.purgeQueue('deploy-contract');
 

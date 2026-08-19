@@ -14,7 +14,9 @@ export interface WebhookDeliveryJobData {
 export class WebhookDeliveryProcessor {
   private readonly logger = new Logger(WebhookDeliveryProcessor.name);
 
-  constructor(private readonly webhookDeliveryService: WebhookDeliveryService) {}
+  constructor(
+    private readonly webhookDeliveryService: WebhookDeliveryService,
+  ) {}
 
   @Process()
   async handle(job: Job<WebhookDeliveryJobData>): Promise<void> {
@@ -22,6 +24,10 @@ export class WebhookDeliveryProcessor {
     this.logger.debug(
       `Processing webhook delivery job ${job.id}: event ${event.id} -> consumer ${consumer.id}`,
     );
-    await this.webhookDeliveryService.deliverEventToConsumer(event, consumer, job.attemptsMade + 1);
+    await this.webhookDeliveryService.deliverEventToConsumer(
+      event,
+      consumer,
+      job.attemptsMade + 1,
+    );
   }
 }

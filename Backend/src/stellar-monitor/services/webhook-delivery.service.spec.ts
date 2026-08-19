@@ -48,9 +48,7 @@ describe('SSRF protection (ssrf.util)', () => {
 
     it('rejects non-http(s) schemes', async () => {
       await expect(validateWebhookUrl('ftp://example.com')).rejects.toThrow();
-      await expect(
-        validateWebhookUrl('file:///etc/passwd'),
-      ).rejects.toThrow();
+      await expect(validateWebhookUrl('file:///etc/passwd')).rejects.toThrow();
     });
 
     it('rejects malformed URLs', async () => {

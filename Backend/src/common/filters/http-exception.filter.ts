@@ -8,7 +8,11 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { randomUUID as uuidv4 } from 'crypto';
-import { ApiError, ApiErrorBody, ApiErrorCode } from '../exceptions/api-error.exception';
+import {
+  ApiError,
+  ApiErrorBody,
+  ApiErrorCode,
+} from '../exceptions/api-error.exception';
 
 /**
  * Global exception filter that converts any thrown exception into the
@@ -49,7 +53,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : undefined,
       );
     } else {
-      this.logger.warn(`[${body.statusCode}] ${body.errorCode}: ${body.message}`);
+      this.logger.warn(
+        `[${body.statusCode}] ${body.errorCode}: ${body.message}`,
+      );
     }
 
     response.status(body.statusCode).json(body);
@@ -113,7 +119,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       errorCode: ApiErrorCode.INTERNAL_SERVER_ERROR,
       message: isProduction
         ? 'An unexpected error occurred. Please try again later.'
-        : (exception instanceof Error ? exception.message : String(exception)),
+        : exception instanceof Error
+          ? exception.message
+          : String(exception),
       details: null,
       timestamp,
       path,

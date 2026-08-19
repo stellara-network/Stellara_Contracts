@@ -37,9 +37,10 @@ export interface ResponseEnvelope<T = unknown> {
  * (which runs *after* this interceptor in the pipeline).
  */
 @Injectable()
-export class ResponseEnvelopeInterceptor<T>
-  implements NestInterceptor<T, ResponseEnvelope<T>>
-{
+export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<
+  T,
+  ResponseEnvelope<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,

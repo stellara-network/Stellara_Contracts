@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
 
@@ -13,17 +19,23 @@ export class WsJwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHandshake(client);
 
     if (!token) {
-      this.logger.warn(`WebSocket connection rejected: No token provided from ${client.id}`);
+      this.logger.warn(
+        `WebSocket connection rejected: No token provided from ${client.id}`,
+      );
       throw new UnauthorizedException('Authentication token required');
     }
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
       client.data.user = payload;
-      this.logger.log(`WebSocket authenticated: ${payload.sub || payload.userId || 'unknown'}`);
+      this.logger.log(
+        `WebSocket authenticated: ${payload.sub || payload.userId || 'unknown'}`,
+      );
       return true;
     } catch (error) {
-      this.logger.warn(`WebSocket connection rejected: Invalid token from ${client.id}`);
+      this.logger.warn(
+        `WebSocket connection rejected: Invalid token from ${client.id}`,
+      );
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

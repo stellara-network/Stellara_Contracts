@@ -38,7 +38,10 @@ describe('HealthModule (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
-        { provide: DatabaseHealthIndicator, useValue: mockDatabaseHealthIndicator },
+        {
+          provide: DatabaseHealthIndicator,
+          useValue: mockDatabaseHealthIndicator,
+        },
         { provide: RedisHealthIndicator, useValue: mockRedisHealthIndicator },
         { provide: QueueHealthIndicator, useValue: mockQueueHealthIndicator },
         { provide: AuthHealthIndicator, useValue: mockAuthHealthIndicator },

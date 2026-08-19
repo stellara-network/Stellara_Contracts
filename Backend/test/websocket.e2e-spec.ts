@@ -7,8 +7,7 @@ import { RedisService } from '../src/redis/redis.service';
 import { createClient } from 'redis';
 
 process.env.WEBHOOK_SECRET_KEY =
-  process.env.WEBHOOK_SECRET_KEY ||
-  'a'.repeat(64);
+  process.env.WEBHOOK_SECRET_KEY || 'a'.repeat(64);
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
@@ -27,7 +26,7 @@ function getPort(httpServer: any): number {
     const parts = address.split(':');
     return parseInt(parts[parts.length - 1], 10);
   }
-  return (address as any)?.port;
+  return address?.port;
 }
 
 function createSocket(
@@ -141,10 +140,7 @@ describe('WebSocket Presence (e2e)', () => {
 
     // Reconnect with a fresh socket
     client1 = createSocket(port, 'user-1');
-    const recovery = await waitForEvent<any>(
-      client1,
-      'presence:room_recovery',
-    );
+    const recovery = await waitForEvent<any>(client1, 'presence:room_recovery');
 
     expect(recovery).toBeDefined();
     expect(recovery.rooms).toContain('test-room');

@@ -6,9 +6,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *   - deliveryAttempts: retry count for the most recent in-flight event
  *   - lastError: last error message recorded on a failed/dead-lettered delivery
  */
-export class AddWebhookConsumerDeliveryColumns1784000000000
-  implements MigrationInterface
-{
+export class AddWebhookConsumerDeliveryColumns1784000000000 implements MigrationInterface {
   name = 'AddWebhookConsumerDeliveryColumns1784000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

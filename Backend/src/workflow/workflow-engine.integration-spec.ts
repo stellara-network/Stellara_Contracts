@@ -341,7 +341,7 @@ describe('Workflow Engine Integration', () => {
         state: WorkflowState.PENDING,
         input: { foo: 'bar' },
         steps: [],
-      } as Workflow;
+      } as unknown as Workflow;
 
       let workflowPersisted = false;
       let resolveInitialSave: ((value: Workflow) => void) | undefined;
@@ -352,7 +352,9 @@ describe('Workflow Engine Integration', () => {
         };
       });
 
-      mockWorkflowRepository.create.mockImplementation((entity) => ({ ...entity }));
+      mockWorkflowRepository.create.mockImplementation((entity) => ({
+        ...entity,
+      }));
       mockWorkflowRepository.findOne.mockImplementation(async () =>
         workflowPersisted ? savedWorkflow : null,
       );
@@ -421,7 +423,7 @@ describe('Workflow Engine Integration', () => {
         userId: 'user123',
         walletAddress: undefined,
         context: {},
-      } as Workflow;
+      } as unknown as Workflow;
 
       const step = {
         id: 'step-timeout',
@@ -438,9 +440,11 @@ describe('Workflow Engine Integration', () => {
         name: 'slow_step',
         isIdempotent: true,
         timeout: 5,
-        execute: jest.fn().mockImplementation(
-          () => new Promise((resolve) => setTimeout(resolve, 25)),
-        ),
+        execute: jest
+          .fn()
+          .mockImplementation(
+            () => new Promise((resolve) => setTimeout(resolve, 25)),
+          ),
       };
 
       mockStepRepository.save.mockResolvedValue(step);

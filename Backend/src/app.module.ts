@@ -48,7 +48,7 @@ import { CorrelationMiddleware } from './observability/middleware/correlation.mi
 
     ScheduleModule.forRoot(),
 
-TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -68,7 +68,7 @@ TypeOrmModule.forRootAsync({
           ApiToken,
           AuditLog,
           AuditLogArchive,
-VoiceJob,
+          VoiceJob,
         ],
         synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',

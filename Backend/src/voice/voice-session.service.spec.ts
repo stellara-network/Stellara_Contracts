@@ -83,7 +83,10 @@ describe('VoiceSessionService', () => {
       const context = FeatureContext.GENERAL;
 
       // Mock MAX_SESSIONS_PER_USER active sessions
-      const sessionIds = Array.from({ length: MAX_SESSIONS_PER_USER }, (_, i) => `session${i}`);
+      const sessionIds = Array.from(
+        { length: MAX_SESSIONS_PER_USER },
+        (_, i) => `session${i}`,
+      );
       mockRedisService.client.sMembers.mockResolvedValue(sessionIds);
 
       const makeSession = (id: string) =>
@@ -100,7 +103,9 @@ describe('VoiceSessionService', () => {
 
       mockRedisService.client.get.mockImplementation((key: string) => {
         const id = key.replace('voice:session:', '');
-        return Promise.resolve(sessionIds.includes(id) ? makeSession(id) : null);
+        return Promise.resolve(
+          sessionIds.includes(id) ? makeSession(id) : null,
+        );
       });
 
       await expect(service.createSession(userId, context)).rejects.toThrow(
@@ -114,7 +119,10 @@ describe('VoiceSessionService', () => {
       const context = FeatureContext.GENERAL;
 
       // MAX - 1 sessions — still under the cap
-      const sessionIds = Array.from({ length: MAX_SESSIONS_PER_USER - 1 }, (_, i) => `session${i}`);
+      const sessionIds = Array.from(
+        { length: MAX_SESSIONS_PER_USER - 1 },
+        (_, i) => `session${i}`,
+      );
       mockRedisService.client.sMembers.mockResolvedValue(sessionIds);
 
       const makeSession = (id: string) =>
@@ -131,7 +139,9 @@ describe('VoiceSessionService', () => {
 
       mockRedisService.client.get.mockImplementation((key: string) => {
         const id = key.replace('voice:session:', '');
-        return Promise.resolve(sessionIds.includes(id) ? makeSession(id) : null);
+        return Promise.resolve(
+          sessionIds.includes(id) ? makeSession(id) : null,
+        );
       });
       mockRedisService.client.setEx.mockResolvedValue('OK');
       mockRedisService.client.sAdd.mockResolvedValue(1);
@@ -358,9 +368,7 @@ describe('VoiceSessionService', () => {
         ttl: 3600, // 1 hour TTL
       };
 
-      mockRedisService.scanKeys.mockResolvedValue([
-        'voice:session:expired123',
-      ]);
+      mockRedisService.scanKeys.mockResolvedValue(['voice:session:expired123']);
       mockRedisService.client.get.mockResolvedValue(
         JSON.stringify(expiredSession),
       );
@@ -386,7 +394,9 @@ describe('VoiceSessionService', () => {
         createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
         lastActivityAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
         // lastPingAt is 90 seconds ago — exceeds the 60s threshold
-        lastPingAt: new Date(Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000).toISOString(),
+        lastPingAt: new Date(
+          Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000,
+        ).toISOString(),
         ttl: 3600,
       };
 
@@ -422,7 +432,9 @@ describe('VoiceSessionService', () => {
       };
 
       mockRedisService.scanKeys.mockResolvedValue(['voice:session:fresh123']);
-      mockRedisService.client.get.mockResolvedValue(JSON.stringify(freshSession));
+      mockRedisService.client.get.mockResolvedValue(
+        JSON.stringify(freshSession),
+      );
 
       const cleanedCount = await service.cleanupStaleSessions();
 
@@ -443,8 +455,12 @@ describe('VoiceSessionService', () => {
         ttl: 3600,
       };
 
-      mockRedisService.scanKeys.mockResolvedValue(['voice:session:already-stale']);
-      mockRedisService.client.get.mockResolvedValue(JSON.stringify(alreadyStaleSession));
+      mockRedisService.scanKeys.mockResolvedValue([
+        'voice:session:already-stale',
+      ]);
+      mockRedisService.client.get.mockResolvedValue(
+        JSON.stringify(alreadyStaleSession),
+      );
 
       const cleanedCount = await service.cleanupStaleSessions();
 
@@ -460,8 +476,12 @@ describe('VoiceSessionService', () => {
         state: ConversationState.IDLE,
         messages: [],
         // No lastPingAt — createdAt is 90s ago, which exceeds the 60s threshold
-        createdAt: new Date(Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000).toISOString(),
-        lastActivityAt: new Date(Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000).toISOString(),
+        createdAt: new Date(
+          Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000,
+        ).toISOString(),
+        lastActivityAt: new Date(
+          Date.now() - HEARTBEAT_TIMEOUT_MS - 30_000,
+        ).toISOString(),
         ttl: 3600,
       };
 
@@ -518,7 +538,9 @@ describe('VoiceSessionService', () => {
         ttl: 3600,
       };
 
-      mockRedisService.client.get.mockResolvedValue(JSON.stringify(mockSession));
+      mockRedisService.client.get.mockResolvedValue(
+        JSON.stringify(mockSession),
+      );
       mockRedisService.client.setEx.mockResolvedValue('OK');
 
       const result = await service.updateLastPingAt(sessionId);

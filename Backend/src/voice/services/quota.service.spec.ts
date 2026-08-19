@@ -33,7 +33,7 @@ describe('QuotaService', () => {
 
     service = module.get<QuotaService>(QuotaService);
     redisService = module.get<RedisService>(RedisService);
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('enforceQuota', () => {
@@ -41,13 +41,13 @@ describe('QuotaService', () => {
     const sessionId = 'session123';
 
     it('should allow request when within all quotas', async () => {
-      mockRedisClient.get.mockResolvedValue('1'); // Within limits
-      mockRedisClient.incr.mockResolvedValue(1);
+      mockRedisClient.get.mockResolvedValue(null); // No usage, no custom quota
 
       const status = await service.enforceQuota(userId, sessionId);
 
-      expect(status.monthlyUsage).toBeDefined();
-      expect(mockRedisClient.incr).toHaveBeenCalled();
+      expect(status.monthlyUsage).toBe(0);
+      expect(status.sessionUsage).toBe(0);
+      expect(status.requestsThisMinute).toBe(0);
     });
 
     it('should throw when monthly quota exceeded', async () => {

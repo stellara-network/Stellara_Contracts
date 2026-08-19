@@ -14,13 +14,32 @@ export class QueueIdempotencyGuard {
 
   /**
    * Generate an idempotency key from job type + payload.
+   *
+   * The payload is canonicalized by recursively sorting object keys so the
+   * key is stable regardless of key insertion order, and — critically — the
+   * full payload is included (a naive array replacer drops nested fields).
    */
-  generateIdempotencyKey(jobType: string, payload: Record<string, any>): string {
-    const canonical = JSON.stringify(
-      { jobType, payload },
-      Object.keys({ jobType, payload }).sort(),
-    );
+  generateIdempotencyKey(
+    jobType: string,
+    payload: Record<string, any>,
+  ): string {
+    const canonical = JSON.stringify(this.sortKeys({ jobType, payload }));
     return crypto.createHash('sha256').update(canonical).digest('hex');
+  }
+
+  private sortKeys(value: any): any {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sortKeys(item));
+    }
+    if (value && typeof value === 'object') {
+      return Object.keys(value)
+        .sort()
+        .reduce((acc: Record<string, any>, key: string) => {
+          acc[key] = this.sortKeys(value[key]);
+          return acc;
+        }, {});
+    }
+    return value;
   }
 
   /**
@@ -70,9 +89,7 @@ export class QueueIdempotencyGuard {
       }
       return { isDuplicate: false };
     } catch (error) {
-      this.logger.error(
-        `Failed to check idempotency key: ${error.message}`,
-      );
+      this.logger.error(`Failed to check idempotency key: ${error.message}`);
       return { isDuplicate: false };
     }
   }
@@ -85,9 +102,7 @@ export class QueueIdempotencyGuard {
     try {
       await this.redisService.client.del(key);
     } catch (error) {
-      this.logger.error(
-        `Failed to release idempotency key: ${error.message}`,
-      );
+      this.logger.error(`Failed to release idempotency key: ${error.message}`);
     }
   }
 }

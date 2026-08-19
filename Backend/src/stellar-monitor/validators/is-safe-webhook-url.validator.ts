@@ -30,7 +30,8 @@ export class IsSafeWebhookUrlConstraint implements ValidatorConstraintInterface 
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
 
     const hostname = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-    if (hostname === 'localhost' || hostname.endsWith('.localhost')) return false;
+    if (hostname === 'localhost' || hostname.endsWith('.localhost'))
+      return false;
 
     if (isIP(hostname) && isPrivateIp(hostname)) return false;
 

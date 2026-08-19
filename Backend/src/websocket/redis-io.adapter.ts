@@ -110,20 +110,19 @@ export class RedisIoAdapter extends IoAdapter {
 
     // Dedicated client for orphan scans — shares the same connection
     // pool settings but runs independently.
-    this.orphanScanClient = createClient({ url: redisUrl, socket: socketOptions });
+    this.orphanScanClient = createClient({
+      url: redisUrl,
+      socket: socketOptions,
+    });
 
     this.pubClient.on('error', (err: Error) => {
       this.connectionState = 'error';
-      this.logger.error(
-        `Redis Pub Client Error: ${maskRedisUrl(err.message)}`,
-      );
+      this.logger.error(`Redis Pub Client Error: ${maskRedisUrl(err.message)}`);
     });
 
     this.subClient.on('error', (err: Error) => {
       this.connectionState = 'error';
-      this.logger.error(
-        `Redis Sub Client Error: ${maskRedisUrl(err.message)}`,
-      );
+      this.logger.error(`Redis Sub Client Error: ${maskRedisUrl(err.message)}`);
     });
 
     this.orphanScanClient.on('error', (err: Error) => {
@@ -172,10 +171,7 @@ export class RedisIoAdapter extends IoAdapter {
         this.subClient.connect(),
         this.orphanScanClient.connect(),
       ]);
-      this.adapterConstructor = createAdapter(
-        this.pubClient,
-        this.subClient,
-      );
+      this.adapterConstructor = createAdapter(this.pubClient, this.subClient);
       this.connectionState = 'connected';
       this.logger.log('Redis adapter initialized successfully');
 
@@ -229,9 +225,7 @@ export class RedisIoAdapter extends IoAdapter {
     });
 
     server.on('error', (err: Error) => {
-      this.logger.error(
-        `Socket.IO server error: ${maskRedisUrl(err.message)}`,
-      );
+      this.logger.error(`Socket.IO server error: ${maskRedisUrl(err.message)}`);
     });
 
     return server;
@@ -333,7 +327,9 @@ export class RedisIoAdapter extends IoAdapter {
     } while (cursor !== '0');
 
     if (purged > 0) {
-      this.logger.log(`Orphan sweep: purged ${purged} stale socket heartbeat keys`);
+      this.logger.log(
+        `Orphan sweep: purged ${purged} stale socket heartbeat keys`,
+      );
     }
   }
 

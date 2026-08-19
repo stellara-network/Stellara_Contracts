@@ -68,28 +68,32 @@ export class StartupValidationService {
     ]);
 
     if (dbCheck.status === 'fulfilled') checks.push(dbCheck.value);
-    else checks.push({
-      name: 'database',
-      status: 'error',
-      message: `Database check threw: ${(dbCheck.reason as Error)?.message}`,
-      responseTimeMs: 0,
-    });
+    else
+      checks.push({
+        name: 'database',
+        status: 'error',
+        message: `Database check threw: ${(dbCheck.reason as Error)?.message}`,
+        responseTimeMs: 0,
+      });
 
     if (redisCheck.status === 'fulfilled') checks.push(redisCheck.value);
-    else checks.push({
-      name: 'redis',
-      status: 'error',
-      message: `Redis check threw: ${(redisCheck.reason as Error)?.message}`,
-      responseTimeMs: 0,
-    });
+    else
+      checks.push({
+        name: 'redis',
+        status: 'error',
+        message: `Redis check threw: ${(redisCheck.reason as Error)?.message}`,
+        responseTimeMs: 0,
+      });
 
-    if (queueConfigCheck.status === 'fulfilled') checks.push(queueConfigCheck.value);
-    else checks.push({
-      name: 'queue-config',
-      status: 'error',
-      message: `Queue config check threw: ${(queueConfigCheck.reason as Error)?.message}`,
-      responseTimeMs: 0,
-    });
+    if (queueConfigCheck.status === 'fulfilled')
+      checks.push(queueConfigCheck.value);
+    else
+      checks.push({
+        name: 'queue-config',
+        status: 'error',
+        message: `Queue config check threw: ${(queueConfigCheck.reason as Error)?.message}`,
+        responseTimeMs: 0,
+      });
 
     const totalTimeMs = Date.now() - startTime;
 
@@ -110,7 +114,9 @@ export class StartupValidationService {
     );
 
     if (failOnError && criticalFailures.length > 0) {
-      const messages = criticalFailures.map((c) => `${c.name}: ${c.message}`).join('; ');
+      const messages = criticalFailures
+        .map((c) => `${c.name}: ${c.message}`)
+        .join('; ');
       throw new Error(
         `Startup validation failed — critical dependency unavailable: ${messages}`,
       );
@@ -132,13 +138,18 @@ export class StartupValidationService {
   /**
    * Validate database connectivity by running a simple query with a timeout.
    */
-  private async checkDatabase(timeoutMs: number): Promise<DependencyCheckResult> {
+  private async checkDatabase(
+    timeoutMs: number,
+  ): Promise<DependencyCheckResult> {
     const start = Date.now();
     try {
       const queryPromise = this.dataSource.query('SELECT 1 AS ok');
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(
-          () => reject(new Error(`Database connection timed out after ${timeoutMs}ms`)),
+          () =>
+            reject(
+              new Error(`Database connection timed out after ${timeoutMs}ms`),
+            ),
           timeoutMs,
         ),
       );
@@ -192,7 +203,10 @@ export class StartupValidationService {
       const connectPromise = client.connect();
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(
-          () => reject(new Error(`Redis connection timed out after ${timeoutMs}ms`)),
+          () =>
+            reject(
+              new Error(`Redis connection timed out after ${timeoutMs}ms`),
+            ),
           timeoutMs,
         ),
       );
@@ -247,7 +261,10 @@ export class StartupValidationService {
     const hasRedisHost = !!this.configService.get('REDIS_HOST');
     const redisHost = this.configService.get('REDIS_HOST') || 'localhost';
     const redisPort = this.configService.get('REDIS_PORT') || 6379;
-    const redisQueueDb = parseInt(String(this.configService.get('REDIS_QUEUE_DB') ?? 1), 10);
+    const redisQueueDb = parseInt(
+      String(this.configService.get('REDIS_QUEUE_DB') ?? 1),
+      10,
+    );
 
     const warnings: string[] = [];
 
@@ -288,7 +305,10 @@ export class StartupValidationService {
 
     for (let i = 0; i < concurrencyVars.length; i++) {
       const { envKey, default: defaultVal } = concurrencyVars[i];
-      const val = parseInt(String(this.configService.get(envKey) || defaultVal), 10);
+      const val = parseInt(
+        String(this.configService.get(envKey) || defaultVal),
+        10,
+      );
       queueDetails[queueNames[i]] = {
         concurrency: val,
         envKey,
@@ -320,7 +340,8 @@ export class StartupValidationService {
         queueDb: redisQueueDb,
         queues: queueDetails,
         defaultAttempts: this.configService.get('QUEUE_DEFAULT_ATTEMPTS') ?? 3,
-        defaultBackoffDelay: this.configService.get('QUEUE_DEFAULT_BACKOFF_DELAY') ?? 2000,
+        defaultBackoffDelay:
+          this.configService.get('QUEUE_DEFAULT_BACKOFF_DELAY') ?? 2000,
       },
     };
   }
@@ -337,7 +358,8 @@ export class StartupValidationService {
     );
 
     for (const check of report.checks) {
-      const icon = check.status === 'ok' ? '✅' : check.status === 'skipped' ? '⏭️' : '❌';
+      const icon =
+        check.status === 'ok' ? '✅' : check.status === 'skipped' ? '⏭️' : '❌';
       const detailStr = check.details
         ? ` (${JSON.stringify(check.details)})`
         : '';

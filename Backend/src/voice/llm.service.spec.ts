@@ -3,44 +3,71 @@ import { LlmService } from './services/llm.service';
 import { RedisService } from '../redis/redis.service';
 import { QuotaService } from './services/quota.service';
 import { LlmCacheService } from './services/llm-cache.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 
 describe('LlmService', () => {
   let service: LlmService;
-  let quotaService: QuotaService;
-  let cacheService: LlmCacheService;
-  let redisService: RedisService;
-
-  const mockRedisClient = {
-    get: jest.fn(),
-    set: jest.fn(),
-    incr: jest.fn(),
-    expire: jest.fn(),
-    del: jest.fn(),
-    keys: jest.fn(),
+  let quotaService: {
+    enforceQuota: jest.Mock;
+    recordRequest: jest.Mock;
+    getQuotaStatus: jest.Mock;
+    resetUserQuota: jest.Mock;
   };
-
-  const mockRedisService = {
-    client: mockRedisClient,
+  let cacheService: {
+    get: jest.Mock;
+    set: jest.Mock;
+    getStats: jest.Mock;
+    invalidate: jest.Mock;
+    invalidateAll: jest.Mock;
+    warmCache: jest.Mock;
   };
 
   beforeEach(async () => {
+    quotaService = {
+      enforceQuota: jest.fn().mockResolvedValue({
+        monthlyUsage: 0,
+        monthlyLimit: 1000,
+        sessionUsage: 0,
+        sessionLimit: 100,
+        requestsThisMinute: 0,
+        requestsPerMinuteLimit: 20,
+      }),
+      recordRequest: jest.fn().mockResolvedValue(undefined),
+      getQuotaStatus: jest.fn().mockResolvedValue({
+        monthlyUsage: 0,
+        monthlyLimit: 1000,
+        sessionUsage: 0,
+        sessionLimit: 100,
+        requestsThisMinute: 0,
+        requestsPerMinuteLimit: 20,
+      }),
+      resetUserQuota: jest.fn().mockResolvedValue(undefined),
+    };
+
+    cacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue(undefined),
+      getStats: jest.fn().mockResolvedValue({
+        totalEntries: 0,
+        totalHits: 0,
+        hitRate: 0,
+        oldestEntry: null,
+      }),
+      invalidate: jest.fn().mockResolvedValue(0),
+      invalidateAll: jest.fn().mockResolvedValue(0),
+      warmCache: jest.fn().mockResolvedValue(1),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LlmService,
-        QuotaService,
-        LlmCacheService,
-        {
-          provide: RedisService,
-          useValue: mockRedisService,
-        },
+        { provide: RedisService, useValue: { client: {} } },
+        { provide: QuotaService, useValue: quotaService },
+        { provide: LlmCacheService, useValue: cacheService },
       ],
     }).compile();
 
     service = module.get<LlmService>(LlmService);
-    quotaService = module.get<QuotaService>(QuotaService);
-    cacheService = module.get<LlmCacheService>(LlmCacheService);
-    redisService = module.get<RedisService>(RedisService);
   });
 
   afterEach(() => {
@@ -58,13 +85,7 @@ describe('LlmService', () => {
     const model = 'gpt-3.5-turbo';
 
     it('should return cached response if available', async () => {
-      mockRedisClient.get.mockResolvedValueOnce(null); // No custom quota
-      mockRedisClient.get.mockResolvedValueOnce(null); // No custom quota
-      mockRedisClient.get.mockResolvedValueOnce(null); // Monthly usage
-      mockRedisClient.get.mockResolvedValueOnce(null); // Session usage
-      mockRedisClient.get.mockResolvedValueOnce(null); // RPM usage
-      mockRedisClient.incr.mockResolvedValue(1); // Initialize counters
-      mockRedisClient.get.mockResolvedValueOnce('cached response'); // Cache hit
+      cacheService.get.mockResolvedValue('cached response');
 
       const result = await service.generateResponse(userId, sessionId, prompt, {
         model,
@@ -73,11 +94,12 @@ describe('LlmService', () => {
       expect(result.cached).toBe(true);
       expect(result.content).toBe('cached response');
       expect(result.model).toBe(model);
+      expect(cacheService.set).not.toHaveBeenCalled();
+      expect(quotaService.recordRequest).not.toHaveBeenCalled();
     });
 
     it('should call LLM and cache response if not in cache', async () => {
-      mockRedisClient.get.mockResolvedValue(null); // Not cached
-      mockRedisClient.incr.mockResolvedValue(1); // Quotas OK
+      cacheService.get.mockResolvedValue(null);
 
       const result = await service.generateResponse(userId, sessionId, prompt, {
         model,
@@ -86,12 +108,14 @@ describe('LlmService', () => {
       expect(result.cached).toBe(false);
       expect(result.content).toBeDefined();
       expect(result.model).toBe(model);
-      expect(mockRedisClient.set).toHaveBeenCalled();
+      expect(cacheService.set).toHaveBeenCalled();
+      expect(quotaService.recordRequest).toHaveBeenCalled();
     });
 
     it('should throw error if monthly quota is exceeded', async () => {
-      mockRedisClient.get.mockResolvedValueOnce(null); // No custom quota
-      mockRedisClient.get.mockResolvedValueOnce('1001'); // Exceeds quota
+      quotaService.enforceQuota.mockRejectedValue(
+        new HttpException('Monthly quota exceeded', 429),
+      );
 
       await expect(
         service.generateResponse(userId, sessionId, prompt),
@@ -99,9 +123,9 @@ describe('LlmService', () => {
     });
 
     it('should throw error if session quota is exceeded', async () => {
-      mockRedisClient.get.mockResolvedValueOnce(null); // No custom quota
-      mockRedisClient.get.mockResolvedValueOnce('100'); // Monthly OK
-      mockRedisClient.get.mockResolvedValueOnce('101'); // Session exceeds limit
+      quotaService.enforceQuota.mockRejectedValue(
+        new HttpException('Session quota exceeded', 429),
+      );
 
       await expect(
         service.generateResponse(userId, sessionId, prompt),
@@ -109,31 +133,30 @@ describe('LlmService', () => {
     });
 
     it('should respect caching preference', async () => {
-      mockRedisClient.get.mockResolvedValue(null);
-      mockRedisClient.incr.mockResolvedValue(1);
+      cacheService.get.mockResolvedValue(null);
 
       const result = await service.generateResponse(userId, sessionId, prompt, {
         useCache: false,
       });
 
       expect(result.content).toBeDefined();
-      expect(mockRedisClient.set).not.toHaveBeenCalled();
+      expect(cacheService.get).not.toHaveBeenCalled();
+      expect(cacheService.set).not.toHaveBeenCalled();
     });
 
     it('should record quota usage by default', async () => {
-      mockRedisClient.get.mockResolvedValue(null);
-      mockRedisClient.incr.mockResolvedValue(1);
+      cacheService.get.mockResolvedValue(null);
 
       await service.generateResponse(userId, sessionId, prompt);
 
-      expect(mockRedisClient.incr).toHaveBeenCalled();
+      expect(quotaService.recordRequest).toHaveBeenCalledWith(
+        userId,
+        sessionId,
+      );
     });
 
     it('should skip quota recording if disabled', async () => {
-      mockRedisClient.get.mockResolvedValue(null);
-      mockRedisClient.incr.mockResolvedValue(1);
-
-      jest.spyOn(quotaService, 'recordRequest').mockResolvedValue();
+      cacheService.get.mockResolvedValue(null);
 
       await service.generateResponse(userId, sessionId, prompt, {
         recordQuota: false,
@@ -149,8 +172,7 @@ describe('LlmService', () => {
     const prompt = 'Hello';
 
     it('should return successful response when available', async () => {
-      mockRedisClient.get.mockResolvedValue(null);
-      mockRedisClient.incr.mockResolvedValue(1);
+      cacheService.get.mockResolvedValue(null);
 
       const result = await service.generateResponseWithFallback(
         userId,
@@ -163,8 +185,9 @@ describe('LlmService', () => {
     });
 
     it('should return fallback message on quota exceeded', async () => {
-      mockRedisClient.get.mockResolvedValueOnce(null);
-      mockRedisClient.get.mockResolvedValueOnce('1001'); // Quota exceeded
+      quotaService.enforceQuota.mockRejectedValue(
+        new HttpException('Quota exceeded', 429),
+      );
 
       const result = await service.generateResponseWithFallback(
         userId,
@@ -177,7 +200,8 @@ describe('LlmService', () => {
     });
 
     it('should never throw exceptions', async () => {
-      mockRedisClient.get.mockRejectedValue(new Error('Redis error'));
+      quotaService.enforceQuota.mockRejectedValue(new Error('Redis error'));
+      quotaService.getQuotaStatus.mockRejectedValue(new Error('Redis error'));
 
       await expect(
         service.generateResponseWithFallback(userId, sessionId, prompt),
@@ -186,30 +210,24 @@ describe('LlmService', () => {
   });
 
   describe('getQuotaStatus', () => {
-    const userId = 'user123';
-    const sessionId = 'session123';
-
     it('should return current quota status', async () => {
-      mockRedisClient.get.mockResolvedValueOnce(null);
-      mockRedisClient.get.mockResolvedValueOnce(null);
-      mockRedisClient.get.mockResolvedValueOnce(null);
-
-      const status = await service.getQuotaStatus(userId, sessionId);
+      const status = await service.getQuotaStatus('user123', 'session123');
 
       expect(status.monthlyUsage).toBeDefined();
       expect(status.sessionUsage).toBeDefined();
       expect(status.requestsThisMinute).toBeDefined();
+      expect(quotaService.getQuotaStatus).toHaveBeenCalled();
     });
   });
 
   describe('cache operations', () => {
-    const prompt = 'test prompt';
-    const model = 'gpt-3.5-turbo';
-
     it('should get cache statistics', async () => {
-      mockRedisClient.get.mockResolvedValueOnce('100');
-      mockRedisClient.get.mockResolvedValueOnce('50');
-      mockRedisClient.keys.mockResolvedValue([]);
+      cacheService.getStats.mockResolvedValue({
+        totalEntries: 100,
+        totalHits: 50,
+        hitRate: 0.5,
+        oldestEntry: null,
+      });
 
       const stats = await service.getCacheStats();
 
@@ -218,49 +236,44 @@ describe('LlmService', () => {
     });
 
     it('should invalidate cache for specific prompt', async () => {
-      mockRedisClient.keys.mockResolvedValue(['key1']);
-      mockRedisClient.del.mockResolvedValue(1);
+      cacheService.invalidate.mockResolvedValue(2);
 
-      const count = await service.invalidateCache(prompt, model);
+      const count = await service.invalidateCache('prompt', 'gpt-3.5-turbo');
 
-      expect(count).toBeGreaterThanOrEqual(0);
+      expect(count).toBe(2);
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'prompt',
+        'gpt-3.5-turbo',
+      );
     });
 
     it('should invalidate all cache', async () => {
-      mockRedisClient.keys.mockResolvedValue(['key1', 'key2']);
-      mockRedisClient.del.mockResolvedValue(2);
+      cacheService.invalidateAll.mockResolvedValue(5);
 
       const count = await service.invalidateAllCache();
 
-      expect(count).toBeGreaterThanOrEqual(0);
+      expect(count).toBe(5);
     });
   });
 
   describe('admin operations', () => {
-    const userId = 'user123';
-
     it('should reset user quota', async () => {
-      mockRedisClient.keys.mockResolvedValue(['quota:monthly:user123:2024-1']);
-      mockRedisClient.del.mockResolvedValue(1);
-
-      await expect(service.resetUserQuota(userId)).resolves.toBeUndefined();
+      await expect(service.resetUserQuota('user123')).resolves.toBeUndefined();
+      expect(quotaService.resetUserQuota).toHaveBeenCalledWith('user123');
     });
 
     it('should warm cache with entries', async () => {
-      mockRedisClient.set.mockResolvedValue('OK');
-      mockRedisClient.incr.mockResolvedValue(1);
+      cacheService.warmCache.mockResolvedValue(2);
 
       const entries = [
-        {
-          prompt: 'Hello',
-          response: 'Hi!',
-          model: 'gpt-3.5-turbo',
-        },
+        { prompt: 'Hello', response: 'Hi!', model: 'gpt-3.5-turbo' },
+        { prompt: 'Bye', response: 'See you', model: 'gpt-3.5-turbo' },
       ];
 
       const count = await service.warmCache(entries);
 
-      expect(count).toBe(1);
+      expect(count).toBe(2);
+      expect(cacheService.warmCache).toHaveBeenCalledWith(entries);
     });
   });
 });

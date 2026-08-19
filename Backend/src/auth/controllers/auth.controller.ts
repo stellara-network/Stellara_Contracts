@@ -86,7 +86,10 @@ export class AuthController {
         success: { type: 'boolean', example: false },
         statusCode: { type: 'number', example: 429 },
         errorCode: { type: 'string', example: 'RATE_LIMIT_EXCEEDED' },
-        message: { type: 'string', example: 'Too many requests. Please slow down.' },
+        message: {
+          type: 'string',
+          example: 'Too many requests. Please slow down.',
+        },
         timestamp: { type: 'string', format: 'date-time' },
         path: { type: 'string' },
       },
@@ -200,7 +203,11 @@ export class AuthController {
           'WALLET_LOGIN_FAILED',
           'unknown',
           undefined,
-          { reason: 'user_creation_failed', wallet: dto.publicKey, correlationId },
+          {
+            reason: 'user_creation_failed',
+            wallet: dto.publicKey,
+            correlationId,
+          },
         );
         throw error;
       }
@@ -216,17 +223,20 @@ export class AuthController {
     await this.walletService.updateLastUsed(dto.publicKey);
 
     // Generate tokens (refresh token seeds a rotation family)
-    const accessToken = await this.jwtAuthService.generateAccessToken(
-      user.id,
-    );
+    const accessToken = await this.jwtAuthService.generateAccessToken(user.id);
     const refreshTokenData = await this.jwtAuthService.generateRefreshToken(
       user.id,
     );
 
-    await this.auditService.logAction('WALLET_LOGIN_SUCCESS', user.id, user.id, {
-      wallet: dto.publicKey,
-      isNewUser,
-    });
+    await this.auditService.logAction(
+      'WALLET_LOGIN_SUCCESS',
+      user.id,
+      user.id,
+      {
+        wallet: dto.publicKey,
+        isNewUser,
+      },
+    );
 
     return {
       accessToken,
@@ -272,7 +282,10 @@ export class AuthController {
         success: { type: 'boolean', example: false },
         statusCode: { type: 'number', example: 401 },
         errorCode: { type: 'string', example: 'TOKEN_INVALID' },
-        message: { type: 'string', example: 'Invalid or expired refresh token' },
+        message: {
+          type: 'string',
+          example: 'Invalid or expired refresh token',
+        },
         timestamp: { type: 'string', format: 'date-time' },
         path: { type: 'string' },
       },
@@ -324,10 +337,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(@Request() req) {
-    await this.jwtAuthService.revokeAllUserRefreshTokens(
-      req.user.id,
-      'logout',
-    );
+    await this.jwtAuthService.revokeAllUserRefreshTokens(req.user.id, 'logout');
     await this.auditService.logAction(
       'WALLET_LOGOUT',
       req.user.id,
@@ -562,9 +572,17 @@ export class AuthController {
               id: { type: 'string' },
               name: { type: 'string' },
               role: { type: 'string' },
-              expiresAt: { type: 'string', format: 'date-time', nullable: true },
+              expiresAt: {
+                type: 'string',
+                format: 'date-time',
+                nullable: true,
+              },
               revoked: { type: 'boolean' },
-              lastUsedAt: { type: 'string', format: 'date-time', nullable: true },
+              lastUsedAt: {
+                type: 'string',
+                format: 'date-time',
+                nullable: true,
+              },
               createdAt: { type: 'string', format: 'date-time' },
             },
           },

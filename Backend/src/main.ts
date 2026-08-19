@@ -21,9 +21,16 @@ const REQUIRED_ENV_VARS = ['JWT_SECRET', 'DB_HOST', 'REDIS_URL'] as const;
  */
 function maskBootstrapError(message: string): string {
   const knownKeys = [
-    'JWT_SECRET', 'DB_PASSWORD', 'REDIS_URL', 'REDIS_PASSWORD',
-    'DATABASE_URL', 'VAULT_TOKEN', 'LLM_API_KEY', 'OPENAI_API_KEY',
-    'STRIPE_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY',
+    'JWT_SECRET',
+    'DB_PASSWORD',
+    'REDIS_URL',
+    'REDIS_PASSWORD',
+    'DATABASE_URL',
+    'VAULT_TOKEN',
+    'LLM_API_KEY',
+    'OPENAI_API_KEY',
+    'STRIPE_SECRET_KEY',
+    'AWS_SECRET_ACCESS_KEY',
   ];
   let safe = message;
   for (const key of knownKeys) {
@@ -33,7 +40,10 @@ function maskBootstrapError(message: string): string {
     }
   }
   // Also mask passwords in connection URLs
-  safe = safe.replace(/(rediss?|postgres|mysql|mongodb):\/\/[^:@\s]*:[^@\s]+@/gi, '$1://***:***@');
+  safe = safe.replace(
+    /(rediss?|postgres|mysql|mongodb):\/\/[^:@\s]*:[^@\s]+@/gi,
+    '$1://***:***@',
+  );
   return safe;
 }
 
@@ -71,14 +81,17 @@ async function bootstrap() {
   const containerStart = Date.now();
 
   app = await NestFactory.create(AppModule, {
-    logger: process.env.NODE_ENV === 'production'
-      ? ['error', 'warn', 'log']
-      : ['error', 'warn', 'log', 'debug'],
+    logger:
+      process.env.NODE_ENV === 'production'
+        ? ['error', 'warn', 'log']
+        : ['error', 'warn', 'log', 'debug'],
   });
 
   app.enableShutdownHooks();
 
-  logger.log(`Phase 2/4: ✅ Container ready (${Date.now() - containerStart}ms)`);
+  logger.log(
+    `Phase 2/4: ✅ Container ready (${Date.now() - containerStart}ms)`,
+  );
 
   // ── Phase 3: Configuration validation ────────────────────────────────────
   // Validates all env vars against the ConfigDto schema (type, range, format).

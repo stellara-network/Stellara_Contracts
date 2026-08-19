@@ -179,9 +179,9 @@ describe('StartupValidationService', () => {
           new Error('ECONNREFUSED'),
         );
 
-        await expect(
-          service.validate({ failOnError: true }),
-        ).rejects.toThrow('Startup validation failed');
+        await expect(service.validate({ failOnError: true })).rejects.toThrow(
+          'Startup validation failed',
+        );
       });
     });
 
@@ -254,7 +254,9 @@ describe('StartupValidationService', () => {
 
         const queueCheck = report.checks.find((c) => c.name === 'queue-config');
         expect(queueCheck!.status).toBe('error');
-        expect(queueCheck!.message).toContain('requires REDIS_URL or REDIS_HOST');
+        expect(queueCheck!.message).toContain(
+          'requires REDIS_URL or REDIS_HOST',
+        );
       });
 
       it('should fail for invalid queue concurrency values', async () => {
@@ -303,27 +305,27 @@ describe('StartupValidationService', () => {
 
         const queueCheck = report.checks.find((c) => c.name === 'queue-config');
         expect(queueCheck!.status).toBe('ok');
-        expect((queueCheck!.details as any).redisHost).toBe('custom-redis-host');
+        expect((queueCheck!.details as any).redisHost).toBe(
+          'custom-redis-host',
+        );
       });
     });
 
     describe('overall report', () => {
       it('should report success when DB and queue config are ok', async () => {
-        mockRedisClient.connect.mockRejectedValue(
-          new Error('Redis down'),
-        );
+        mockRedisClient.connect.mockRejectedValue(new Error('Redis down'));
 
         const report = await service.validate({ failOnError: false });
 
         // DB ok, Redis error, queue config ok
         expect(report.checks.filter((c) => c.status === 'ok')).toHaveLength(2);
-        expect(report.checks.filter((c) => c.status === 'error')).toHaveLength(1);
+        expect(report.checks.filter((c) => c.status === 'error')).toHaveLength(
+          1,
+        );
       });
 
       it('should report overall failure when DB is down', async () => {
-        (dataSource.query as jest.Mock).mockRejectedValue(
-          new Error('DB down'),
-        );
+        (dataSource.query as jest.Mock).mockRejectedValue(new Error('DB down'));
 
         const report = await service.validate({ failOnError: false });
 

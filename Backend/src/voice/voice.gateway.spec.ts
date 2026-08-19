@@ -1,7 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { VoiceGateway } from './voice.gateway';
-import { VoiceSessionService, MAX_SESSIONS_PER_USER } from './services/voice-session.service';
+import {
+  VoiceSessionService,
+  MAX_SESSIONS_PER_USER,
+} from './services/voice-session.service';
 import { StreamingResponseService } from './services/streaming-response.service';
+import { WebSocketTracingAdapter } from '../observability/middleware/websocket-tracing.adapter';
+import { WsJwtAuthGuard } from '../auth/guards/ws-jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { FeatureContext } from './types/feature-context.enum';
 import { ConversationState } from './types/conversation-state.enum';
@@ -25,6 +31,9 @@ describe('VoiceGateway', () => {
         userId: 'user123',
         sessionId: 'session123',
       },
+    },
+    data: {
+      user: { sub: 'user123', userId: 'user123' },
     },
     join: jest.fn(),
     leave: jest.fn(),
@@ -55,6 +64,12 @@ describe('VoiceGateway', () => {
     interruptStream: jest.fn(),
   };
 
+  const mockWebSocketTracingAdapter = {
+    initializeConnection: jest.fn().mockReturnValue({}),
+    handleDisconnection: jest.fn(),
+    recordMessage: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -66,6 +81,15 @@ describe('VoiceGateway', () => {
         {
           provide: StreamingResponseService,
           useValue: mockStreamingResponseService,
+        },
+        {
+          provide: WebSocketTracingAdapter,
+          useValue: mockWebSocketTracingAdapter,
+        },
+        WsJwtAuthGuard,
+        {
+          provide: JwtService,
+          useValue: { verifyAsync: jest.fn(), sign: jest.fn() },
         },
       ],
     }).compile();
@@ -208,7 +232,9 @@ describe('VoiceGateway', () => {
       mockVoiceSessionService.getUserActiveSessions.mockResolvedValue([]);
       // createSession itself throws when the limit is reached
       mockVoiceSessionService.createSession.mockRejectedValue(
-        new Error('Session limit reached: users may have at most 3 concurrent sessions'),
+        new Error(
+          'Session limit reached: users may have at most 3 concurrent sessions',
+        ),
       );
 
       await gateway.createSession(mockClient as any, createSessionDto);
@@ -223,7 +249,9 @@ describe('VoiceGateway', () => {
   describe('handleMessage', () => {
     beforeEach(() => {
       // AC-1: gateway now resolves session via Redis
-      mockVoiceSessionService.getUserActiveSession.mockResolvedValue('session123');
+      mockVoiceSessionService.getUserActiveSession.mockResolvedValue(
+        'session123',
+      );
     });
 
     it('should start streaming response for valid message', async () => {
@@ -262,7 +290,9 @@ describe('VoiceGateway', () => {
 
   describe('handleInterrupt', () => {
     beforeEach(() => {
-      mockVoiceSessionService.getUserActiveSession.mockResolvedValue('session123');
+      mockVoiceSessionService.getUserActiveSession.mockResolvedValue(
+        'session123',
+      );
     });
 
     it('should interrupt streaming response', async () => {
@@ -296,13 +326,17 @@ describe('VoiceGateway', () => {
 
   describe('handleTerminate', () => {
     beforeEach(() => {
-      mockVoiceSessionService.getUserActiveSession.mockResolvedValue('session123');
+      mockVoiceSessionService.getUserActiveSession.mockResolvedValue(
+        'session123',
+      );
     });
 
     it('should terminate session successfully and clear Redis pointer', async () => {
       mockStreamingResponseService.interruptStream.mockResolvedValue(true);
       mockVoiceSessionService.terminateSession.mockResolvedValue(true);
-      mockVoiceSessionService.deleteUserActiveSession.mockResolvedValue(undefined);
+      mockVoiceSessionService.deleteUserActiveSession.mockResolvedValue(
+        undefined,
+      );
 
       await gateway.handleTerminate(mockClient as any);
 
@@ -314,9 +348,9 @@ describe('VoiceGateway', () => {
         'session123',
       );
       // AC-1: pointer must be cleared on termination
-      expect(mockVoiceSessionService.deleteUserActiveSession).toHaveBeenCalledWith(
-        'user123',
-      );
+      expect(
+        mockVoiceSessionService.deleteUserActiveSession,
+      ).toHaveBeenCalledWith('user123');
       expect(mockClient.leave).toHaveBeenCalledWith('session123');
       expect(mockClient.emit).toHaveBeenCalledWith('voice:terminated', {
         sessionId: 'session123',
@@ -337,13 +371,17 @@ describe('VoiceGateway', () => {
 
   describe('handlePing', () => {
     beforeEach(() => {
-      mockVoiceSessionService.getUserActiveSession.mockResolvedValue('session123');
+      mockVoiceSessionService.getUserActiveSession.mockResolvedValue(
+        'session123',
+      );
     });
 
     it('should update session socket, heartbeat timestamp and refresh TTL, then pong', async () => {
       mockVoiceSessionService.updateSessionSocket.mockResolvedValue(true);
       mockVoiceSessionService.updateLastPingAt.mockResolvedValue(true);
-      mockVoiceSessionService.refreshUserSessionTTL.mockResolvedValue(undefined);
+      mockVoiceSessionService.refreshUserSessionTTL.mockResolvedValue(
+        undefined,
+      );
 
       await gateway.handlePing(mockClient as any);
 
@@ -356,9 +394,9 @@ describe('VoiceGateway', () => {
         'session123',
       );
       // AC-1: TTL on the active-session pointer refreshed
-      expect(mockVoiceSessionService.refreshUserSessionTTL).toHaveBeenCalledWith(
-        'user123',
-      );
+      expect(
+        mockVoiceSessionService.refreshUserSessionTTL,
+      ).toHaveBeenCalledWith('user123');
       expect(mockClient.emit).toHaveBeenCalledWith('voice:pong', {
         timestamp: expect.any(Number),
       });
@@ -369,7 +407,9 @@ describe('VoiceGateway', () => {
 
       await gateway.handlePing(mockClient as any);
 
-      expect(mockVoiceSessionService.updateSessionSocket).not.toHaveBeenCalled();
+      expect(
+        mockVoiceSessionService.updateSessionSocket,
+      ).not.toHaveBeenCalled();
       expect(mockVoiceSessionService.updateLastPingAt).not.toHaveBeenCalled();
       expect(mockClient.emit).toHaveBeenCalledWith('voice:pong', {
         timestamp: expect.any(Number),

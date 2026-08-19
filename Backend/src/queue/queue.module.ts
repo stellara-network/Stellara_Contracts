@@ -59,13 +59,23 @@ export class QueueModule implements OnModuleInit {
     private readonly queueJobTracingWrapper: QueueJobTracingWrapper,
     @InjectQueue('deploy-contract') private readonly deployContractQueue: Queue,
     @InjectQueue('process-tts') private readonly processTtsQueue: Queue,
-    @InjectQueue('index-market-news') private readonly indexMarketNewsQueue: Queue,
+    @InjectQueue('index-market-news')
+    private readonly indexMarketNewsQueue: Queue,
   ) {}
 
   async onModuleInit() {
     // Wrap queues for metrics
-    this.queueJobTracingWrapper.wrapQueueMetrics(this.deployContractQueue, 'deploy-contract');
-    this.queueJobTracingWrapper.wrapQueueMetrics(this.processTtsQueue, 'process-tts');
-    this.queueJobTracingWrapper.wrapQueueMetrics(this.indexMarketNewsQueue, 'index-market-news');
+    this.queueJobTracingWrapper.wrapQueueMetrics(
+      this.deployContractQueue,
+      'deploy-contract',
+    );
+    this.queueJobTracingWrapper.wrapQueueMetrics(
+      this.processTtsQueue,
+      'process-tts',
+    );
+    this.queueJobTracingWrapper.wrapQueueMetrics(
+      this.indexMarketNewsQueue,
+      'index-market-news',
+    );
   }
 }

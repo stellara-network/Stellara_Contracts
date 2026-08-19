@@ -17,7 +17,11 @@ import { TracingService } from '../observability/services/tracing.service';
   transports: ['websocket', 'polling'],
 })
 export class WebsocketGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy
+  implements
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnModuleInit,
+    OnModuleDestroy
 {
   @WebSocketServer()
   server: Server;
@@ -44,8 +48,10 @@ export class WebsocketGateway
   private orphanPurgeTimer: ReturnType<typeof setInterval> | undefined;
 
   /** How often (ms) to sweep for orphaned socket heartbeat keys. */
-  private readonly ORPHAN_PURGE_INTERVAL_MS =
-    parseInt(process.env.ORPHAN_PURGE_INTERVAL_MS || '60000', 10);
+  private readonly ORPHAN_PURGE_INTERVAL_MS = parseInt(
+    process.env.ORPHAN_PURGE_INTERVAL_MS || '60000',
+    10,
+  );
 
   constructor(
     private readonly presenceService: PresenceService,
@@ -105,8 +111,7 @@ export class WebsocketGateway
   }
 
   private async _processConnection(client: Socket, userId: string) {
-    const correlationId =
-      client.handshake.auth.correlationId || randomUUID();
+    const correlationId = client.handshake.auth.correlationId || randomUUID();
     const namespace = (client.nsp as any)?.name || '/';
 
     this.metricsService.recordWebSocketConnection(namespace, correlationId);
@@ -172,8 +177,7 @@ export class WebsocketGateway
 
   async handleDisconnect(client: Socket) {
     const userId =
-      this.socketToUser.get(client.id) ??
-      client.handshake.auth.userId;
+      this.socketToUser.get(client.id) ?? client.handshake.auth.userId;
 
     // Clean up the mapping regardless of whether we find the user.
     this.socketToUser.delete(client.id);
@@ -255,7 +259,11 @@ export class WebsocketGateway
     const correlationId = randomUUID();
     const namespace = (client.nsp as any)?.name || '/';
 
-    this.metricsService.recordWebSocketMessage(namespace, 'join_room', correlationId);
+    this.metricsService.recordWebSocketMessage(
+      namespace,
+      'join_room',
+      correlationId,
+    );
 
     // Refresh socket-level heartbeat so orphan detection knows it's alive.
     await this.presenceService.refreshSocketHeartbeat(client.id);
@@ -287,7 +295,11 @@ export class WebsocketGateway
     const correlationId = randomUUID();
     const namespace = (client.nsp as any)?.name || '/';
 
-    this.metricsService.recordWebSocketMessage(namespace, 'leave_room', correlationId);
+    this.metricsService.recordWebSocketMessage(
+      namespace,
+      'leave_room',
+      correlationId,
+    );
 
     await this.presenceService.refreshSocketHeartbeat(client.id);
 
@@ -319,10 +331,7 @@ export class WebsocketGateway
   }
 
   @SubscribeMessage('message')
-  handleMessage(
-    client: Socket,
-    payload: { roomId: string; message: string },
-  ) {
+  handleMessage(client: Socket, payload: { roomId: string; message: string }) {
     const userId = client.handshake.auth.userId;
     if (!userId) {
       client.emit('auth:error', { message: 'userId is required' });
@@ -332,7 +341,11 @@ export class WebsocketGateway
     const correlationId = randomUUID();
     const namespace = (client.nsp as any)?.name || '/';
 
-    this.metricsService.recordWebSocketMessage(namespace, 'message', correlationId);
+    this.metricsService.recordWebSocketMessage(
+      namespace,
+      'message',
+      correlationId,
+    );
 
     const traceContext = this.tracingService.createTraceContext(
       undefined,

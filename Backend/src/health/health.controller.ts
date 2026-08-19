@@ -7,7 +7,10 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DatabaseHealthIndicator } from './database-health.indicator';
 import { RedisHealthIndicator } from './redis-health.indicator';
-import { QueueHealthIndicator, QueueHealthCheckResult } from './queue-health.indicator';
+import {
+  QueueHealthIndicator,
+  QueueHealthCheckResult,
+} from './queue-health.indicator';
 import { AuthHealthIndicator } from './auth-health.indicator';
 import { StellarEventMonitorService } from '../stellar-monitor/services/stellar-event-monitor.service';
 
@@ -32,9 +35,14 @@ export class HealthController {
   }
 
   @Get('ready')
-  @ApiOperation({ summary: 'Readiness probe — checks all downstream dependencies' })
+  @ApiOperation({
+    summary: 'Readiness probe — checks all downstream dependencies',
+  })
   @ApiResponse({ status: 200, description: 'All dependencies healthy' })
-  @ApiResponse({ status: 503, description: 'One or more dependencies unhealthy' })
+  @ApiResponse({
+    status: 503,
+    description: 'One or more dependencies unhealthy',
+  })
   async getReadiness() {
     const start = Date.now();
     const checks: Record<string, any> = {};

@@ -12,12 +12,16 @@ export class FallbackProvider implements AiProvider {
     private readonly cache: AiCacheService,
   ) {}
 
-  async generate(prompt: string): Promise<{ response: string; tokensUsed: number }> {
+  async generate(
+    prompt: string,
+  ): Promise<{ response: string; tokensUsed: number }> {
     // 1. Try primary provider
     try {
       return await this.primary.generate(prompt);
     } catch (primaryErr) {
-      this.logger.warn(`Primary provider failed: ${(primaryErr as Error).message}`);
+      this.logger.warn(
+        `Primary provider failed: ${(primaryErr as Error).message}`,
+      );
     }
 
     // 2. Try cache as secondary
@@ -31,7 +35,8 @@ export class FallbackProvider implements AiProvider {
     // 3. Final static fallback
     this.logger.error('All providers failed; returning degraded response');
     return {
-      response: 'AI service is temporarily unavailable. Please try again later.',
+      response:
+        'AI service is temporarily unavailable. Please try again later.',
       tokensUsed: 0,
     };
   }

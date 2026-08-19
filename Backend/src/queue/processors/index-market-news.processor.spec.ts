@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bull';
 import { IndexMarketNewsProcessor } from './index-market-news.processor';
+import { QueueJobTracingWrapper } from '../../observability/middleware/queue-job-tracing.wrapper';
 
 describe('IndexMarketNewsProcessor', () => {
   let processor: IndexMarketNewsProcessor;
@@ -25,6 +26,12 @@ describe('IndexMarketNewsProcessor', () => {
       providers: [
         IndexMarketNewsProcessor,
         { provide: getQueueToken('failed-jobs'), useValue: { add: jest.fn() } },
+        {
+          provide: QueueJobTracingWrapper,
+          useValue: {
+            wrapProcessor: jest.fn().mockImplementation((fn: any) => fn),
+          },
+        },
       ],
     }).compile();
 

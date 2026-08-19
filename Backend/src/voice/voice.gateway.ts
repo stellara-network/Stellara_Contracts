@@ -46,14 +46,19 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const sessionId = client.handshake.auth.sessionId;
 
     if (!userId) {
-      this.logger.warn(`Voice client rejected: No user ID in token from ${client.id}`);
+      this.logger.warn(
+        `Voice client rejected: No user ID in token from ${client.id}`,
+      );
       client.emit('voice:error', { message: 'Authentication failed' });
       client.disconnect();
       return;
     }
 
     // Initialize tracing for this connection
-    const traceContext = this.webSocketTracingAdapter.initializeConnection(client, '/voice');
+    const traceContext = this.webSocketTracingAdapter.initializeConnection(
+      client,
+      '/voice',
+    );
     if (userId) {
       // Update trace context with user ID if available
       traceContext.userId = userId;
@@ -64,12 +69,17 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (sessionId) {
       const session = await this.voiceSessionService.getSession(sessionId);
       if (session && session.userId === userId) {
-        await this.voiceSessionService.updateSessionSocket(sessionId, client.id);
+        await this.voiceSessionService.updateSessionSocket(
+          sessionId,
+          client.id,
+        );
         await this.voiceSessionService.resumeSession(sessionId);
         client.join(sessionId);
         await this.voiceSessionService.setUserActiveSession(userId, sessionId);
         client.emit('voice:resumed', { sessionId, state: session.state });
-        this.logger.log(`Resumed voice session ${sessionId} for user ${userId}`);
+        this.logger.log(
+          `Resumed voice session ${sessionId} for user ${userId}`,
+        );
       } else {
         client.emit('voice:error', { message: 'Invalid session' });
         client.disconnect();
@@ -81,9 +91,15 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.data.user?.sub || client.data.user?.userId;
     const sessionId = client.handshake.auth.sessionId;
 
-    this.webSocketTracingAdapter.handleDisconnection(client.id, '/voice', 'client disconnect');
+    this.webSocketTracingAdapter.handleDisconnection(
+      client.id,
+      '/voice',
+      'client disconnect',
+    );
 
-    this.logger.log(`Voice client disconnected: ${client.id}, userId: ${userId}`);
+    this.logger.log(
+      `Voice client disconnected: ${client.id}, userId: ${userId}`,
+    );
 
     if (userId && sessionId) {
       await this.voiceSessionService.updateSessionState(
@@ -96,9 +112,16 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage('voice:create-session')
-  async createSession(@ConnectedSocket() client: Socket, @MessageBody() createSessionDto: CreateSessionDto) {
+  async createSession(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() createSessionDto: CreateSessionDto,
+  ) {
     try {
-      this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:create-session');
+      this.webSocketTracingAdapter.recordMessage(
+        client.id,
+        '/voice',
+        'voice:create-session',
+      );
 
       const userId = client.data.user?.sub || client.data.user?.userId;
       if (!userId) {
@@ -106,12 +129,19 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const existingSessions = await this.voiceSessionService.getUserActiveSessions(userId);
+      const existingSessions =
+        await this.voiceSessionService.getUserActiveSessions(userId);
       if (existingSessions.length > 0) {
         const existingSession = existingSessions[0];
-        await this.voiceSessionService.updateSessionSocket(existingSession.id, client.id);
+        await this.voiceSessionService.updateSessionSocket(
+          existingSession.id,
+          client.id,
+        );
         client.join(existingSession.id);
-        await this.voiceSessionService.setUserActiveSession(userId, existingSession.id);
+        await this.voiceSessionService.setUserActiveSession(
+          userId,
+          existingSession.id,
+        );
         client.emit('voice:session-created', { session: existingSession });
         return;
       }
@@ -149,12 +179,20 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage('voice:message')
-  async handleMessage(@ConnectedSocket() client: Socket, @MessageBody() messageDto: VoiceMessageDto) {
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() messageDto: VoiceMessageDto,
+  ) {
     try {
-      this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:message');
+      this.webSocketTracingAdapter.recordMessage(
+        client.id,
+        '/voice',
+        'voice:message',
+      );
 
       const userId = client.data.user?.sub || client.data.user?.userId;
-      const sessionId = await this.voiceSessionService.getUserActiveSession(userId);
+      const sessionId =
+        await this.voiceSessionService.getUserActiveSession(userId);
 
       if (!sessionId) {
         client.emit('voice:error', { message: 'No active session' });
@@ -167,13 +205,16 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const streamId = await this.streamingResponseService.startStreamingResponse(
-        this.server,
-        sessionId,
-        messageDto.content,
-      );
+      const streamId =
+        await this.streamingResponseService.startStreamingResponse(
+          this.server,
+          sessionId,
+          messageDto.content,
+        );
 
-      this.logger.log(`Started streaming response ${streamId} for session ${sessionId}`);
+      this.logger.log(
+        `Started streaming response ${streamId} for session ${sessionId}`,
+      );
     } catch (error) {
       this.logger.error('Error handling message:', error);
       client.emit('voice:error', { message: 'Failed to process message' });
@@ -182,12 +223,20 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage('voice:interrupt')
-  async handleInterrupt(@ConnectedSocket() client: Socket, @MessageBody() data: { streamId?: string }) {
+  async handleInterrupt(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { streamId?: string },
+  ) {
     try {
-      this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:interrupt');
+      this.webSocketTracingAdapter.recordMessage(
+        client.id,
+        '/voice',
+        'voice:interrupt',
+      );
 
       const userId = client.data.user?.sub || client.data.user?.userId;
-      const sessionId = await this.voiceSessionService.getUserActiveSession(userId);
+      const sessionId =
+        await this.voiceSessionService.getUserActiveSession(userId);
 
       if (!sessionId) {
         client.emit('voice:error', { message: 'No active session' });
@@ -201,7 +250,10 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       if (success) {
-        client.emit('voice:interrupt-acknowledged', { sessionId, streamId: data.streamId });
+        client.emit('voice:interrupt-acknowledged', {
+          sessionId,
+          streamId: data.streamId,
+        });
       } else {
         client.emit('voice:error', { message: 'Failed to interrupt' });
       }
@@ -213,12 +265,20 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage('voice:action')
-  async handleSessionAction(@ConnectedSocket() client: Socket, @MessageBody() actionDto: SessionActionDto) {
+  async handleSessionAction(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() actionDto: SessionActionDto,
+  ) {
     try {
-      this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:action');
+      this.webSocketTracingAdapter.recordMessage(
+        client.id,
+        '/voice',
+        'voice:action',
+      );
 
       const userId = client.data.user?.sub || client.data.user?.userId;
-      const sessionId = await this.voiceSessionService.getUserActiveSession(userId);
+      const sessionId =
+        await this.voiceSessionService.getUserActiveSession(userId);
 
       if (!sessionId) {
         client.emit('voice:error', { message: 'No active session' });
@@ -226,13 +286,22 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       if (actionDto.interrupt) {
-        await this.streamingResponseService.interruptStream(this.server, sessionId);
+        await this.streamingResponseService.interruptStream(
+          this.server,
+          sessionId,
+        );
       }
 
       if (actionDto.state) {
-        const success = await this.voiceSessionService.updateSessionState(sessionId, actionDto.state);
+        const success = await this.voiceSessionService.updateSessionState(
+          sessionId,
+          actionDto.state,
+        );
         if (success) {
-          client.emit('voice:state-updated', { sessionId, state: actionDto.state });
+          client.emit('voice:state-updated', {
+            sessionId,
+            state: actionDto.state,
+          });
         } else {
           client.emit('voice:error', { message: 'Invalid state transition' });
         }
@@ -247,25 +316,36 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('voice:terminate')
   async handleTerminate(@ConnectedSocket() client: Socket) {
     try {
-      this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:terminate');
+      this.webSocketTracingAdapter.recordMessage(
+        client.id,
+        '/voice',
+        'voice:terminate',
+      );
 
       const userId = client.data.user?.sub || client.data.user?.userId;
-      const sessionId = await this.voiceSessionService.getUserActiveSession(userId);
+      const sessionId =
+        await this.voiceSessionService.getUserActiveSession(userId);
 
       if (!sessionId) {
         client.emit('voice:error', { message: 'No active session' });
         return;
       }
 
-      await this.streamingResponseService.interruptStream(this.server, sessionId);
+      await this.streamingResponseService.interruptStream(
+        this.server,
+        sessionId,
+      );
 
-      const success = await this.voiceSessionService.terminateSession(sessionId);
+      const success =
+        await this.voiceSessionService.terminateSession(sessionId);
 
       if (success) {
         client.leave(sessionId);
         await this.voiceSessionService.deleteUserActiveSession(userId);
         client.emit('voice:terminated', { sessionId });
-        this.logger.log(`Terminated voice session ${sessionId} for user ${userId}`);
+        this.logger.log(
+          `Terminated voice session ${sessionId} for user ${userId}`,
+        );
       } else {
         client.emit('voice:error', { message: 'Failed to terminate session' });
       }
@@ -278,10 +358,15 @@ export class VoiceGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsJwtAuthGuard)
   @SubscribeMessage('voice:ping')
   async handlePing(@ConnectedSocket() client: Socket) {
-    this.webSocketTracingAdapter.recordMessage(client.id, '/voice', 'voice:ping');
+    this.webSocketTracingAdapter.recordMessage(
+      client.id,
+      '/voice',
+      'voice:ping',
+    );
 
     const userId = client.data.user?.sub || client.data.user?.userId;
-    const sessionId = await this.voiceSessionService.getUserActiveSession(userId);
+    const sessionId =
+      await this.voiceSessionService.getUserActiveSession(userId);
 
     if (sessionId) {
       await this.voiceSessionService.updateSessionSocket(sessionId, client.id);

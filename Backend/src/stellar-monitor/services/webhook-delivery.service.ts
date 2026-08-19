@@ -37,7 +37,8 @@ export class WebhookDeliveryService {
   private readonly inFlight = new Set<string>();
 
   constructor(
-    @InjectQueue('webhook-delivery') private readonly deliveryQueue: Queue<WebhookDeliveryJobData>,
+    @InjectQueue('webhook-delivery')
+    private readonly deliveryQueue: Queue<WebhookDeliveryJobData>,
     private readonly consumerManagementService: ConsumerManagementService,
     private readonly eventStorageService: EventStorageService,
   ) {
@@ -122,7 +123,12 @@ export class WebhookDeliveryService {
         this.logger.warn(
           `Refusing delivery to unsafe URL for consumer ${consumer.id}: ${ssrfError.message}`,
         );
-        await this.moveToDeadLetter(event, consumer, attempt, ssrfError.message);
+        await this.moveToDeadLetter(
+          event,
+          consumer,
+          attempt,
+          ssrfError.message,
+        );
         return;
       }
 
@@ -251,7 +257,10 @@ export class WebhookDeliveryService {
     attempt: number,
   ): Promise<void> {
     // Update consumer stats and record the attempt/error on the consumer.
-    await this.consumerManagementService.updateDeliveryStats(consumer.id, false);
+    await this.consumerManagementService.updateDeliveryStats(
+      consumer.id,
+      false,
+    );
     await this.consumerManagementService.recordDeliveryProgress(
       consumer.id,
       attempt,
@@ -260,7 +269,12 @@ export class WebhookDeliveryService {
 
     if (attempt >= WebhookDeliveryService.MAX_ATTEMPTS) {
       // Max attempts reached — move to dead-letter.
-      await this.moveToDeadLetter(event, consumer, attempt, result.errorMessage);
+      await this.moveToDeadLetter(
+        event,
+        consumer,
+        attempt,
+        result.errorMessage,
+      );
       return;
     }
 

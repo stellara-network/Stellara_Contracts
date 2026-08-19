@@ -23,8 +23,5 @@ export interface MarketDataProvider {
   /**
    * Fetch metadata/statistics for a given asset from Horizon
    */
-  getAssetStats(
-    assetCode: string,
-    issuer: string,
-  ): Promise<any>;
+  getAssetStats(assetCode: string, issuer: string): Promise<any>;
 }

@@ -356,46 +356,68 @@ export class RecoveryService implements OnModuleInit {
    */
   async recoverFromQueueFailures(): Promise<void> {
     this.logger.log('Recovering workflows from queue failures');
-    const queuesToCheck = ['deploy-contract', 'process-tts', 'index-market-news'];
+    const queuesToCheck = [
+      'deploy-contract',
+      'process-tts',
+      'index-market-news',
+    ];
 
     for (const queueName of queuesToCheck) {
       try {
-        const dlqItems = await this.queueService.getDeadLetterQueue(queueName, 100);
-        
+        const dlqItems = await this.queueService.getDeadLetterQueue(
+          queueName,
+          100,
+        );
+
         for (const item of dlqItems) {
           const jobData = typeof item === 'string' ? JSON.parse(item) : item;
           // Look for workflow metadata in the failed job
-          const workflowId = jobData?.data?.workflowId || jobData?.data?.context?.workflowId;
-          const stepIndex = jobData?.data?.stepIndex || jobData?.data?.context?.stepIndex;
+          const workflowId =
+            jobData?.data?.workflowId || jobData?.data?.context?.workflowId;
+          const stepIndex =
+            jobData?.data?.stepIndex || jobData?.data?.context?.stepIndex;
 
           if (workflowId) {
             const workflow = await this.workflowRepository.findOne({
               where: { id: workflowId },
-              relations: { steps: true }
+              relations: { steps: true },
             });
 
             if (workflow && workflow.state === WorkflowState.RUNNING) {
-              this.logger.log(`Found failed queue job for running workflow ${workflowId}`);
-              
-              const step = workflow.steps.find(s => s.stepIndex === stepIndex) || 
-                           workflow.steps.find(s => s.state === StepState.RUNNING);
-              
+              this.logger.log(
+                `Found failed queue job for running workflow ${workflowId}`,
+              );
+
+              const step =
+                workflow.steps.find((s) => s.stepIndex === stepIndex) ||
+                workflow.steps.find((s) => s.state === StepState.RUNNING);
+
               if (step && step.state === StepState.RUNNING) {
                 step.state = StepState.FAILED;
                 step.failedAt = new Date();
                 step.failureReason = `Queue job failed in ${queueName}: ${jobData.error || 'Unknown error'}`;
                 step.retryCount += 1;
 
-                if (this.stateMachine.shouldRetry(StepState.FAILED, step.retryCount, step.maxRetries)) {
-                  step.nextRetryAt = this.stateMachine.calculateNextRetryTime(step.retryCount);
-                  this.logger.log(`Scheduling retry for step: ${step.stepName}`);
+                if (
+                  this.stateMachine.shouldRetry(
+                    StepState.FAILED,
+                    step.retryCount,
+                    step.maxRetries,
+                  )
+                ) {
+                  step.nextRetryAt = this.stateMachine.calculateNextRetryTime(
+                    step.retryCount,
+                  );
+                  this.logger.log(
+                    `Scheduling retry for step: ${step.stepName}`,
+                  );
                 } else {
                   workflow.state = WorkflowState.FAILED;
                   workflow.failedAt = new Date();
                   workflow.failureReason = `Step ${step.stepName} failed after max queue retries`;
                   await this.workflowRepository.save(workflow);
                 }
-                
+
                 await this.stepRepository.save(step);
               }
             }

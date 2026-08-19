@@ -34,20 +34,20 @@ describe('Database Config', () => {
       expect(options.synchronize).toBe(false);
     });
 
-it('should configure retry attempts with delay', () => {
-       const config = {
-         host: 'localhost',
-         port: 5432,
-         username: 'testuser',
-         password: 'testpass',
-         database: 'testdb',
-       };
+    it('should configure retry attempts with delay', () => {
+      const config = {
+        host: 'localhost',
+        port: 5432,
+        username: 'testuser',
+        password: 'testpass',
+        database: 'testdb',
+      };
 
-       const options = buildTypeOrmOptions(config);
+      const options = buildTypeOrmOptions(config);
 
-       expect(options.retryAttempts).toBe(5);
-       expect(options.retryDelay).toBe(3000);
-     });
+      expect(options.retryAttempts).toBe(5);
+      expect(options.retryDelay).toBe(3000);
+    });
 
     it('should use provided database connection configuration', () => {
       const config = {
@@ -58,7 +58,7 @@ it('should configure retry attempts with delay', () => {
         database: 'production_db',
       };
 
-      const options = buildTypeOrmOptions(config);
+      const options = buildTypeOrmOptions(config) as any;
 
       expect(options.host).toBe('db.example.com');
       expect(options.port).toBe(5433);
@@ -79,7 +79,9 @@ it('should configure retry attempts with delay', () => {
       const options = buildTypeOrmOptions(config);
 
       expect(options.entities).toEqual(['dist/**/*.entity{.ts,.js}']);
-      expect(options.migrations).toEqual(['dist/database/migrations/*{.ts,.js}']);
+      expect(options.migrations).toEqual([
+        'dist/database/migrations/*{.ts,.js}',
+      ]);
     });
   });
 });

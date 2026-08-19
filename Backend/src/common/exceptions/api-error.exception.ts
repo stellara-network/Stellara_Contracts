@@ -101,19 +101,13 @@ export class ConflictError extends ApiError {
 }
 
 export class UnauthorizedError extends ApiError {
-  constructor(
-    message = 'Unauthorized',
-    errorCode = ApiErrorCode.UNAUTHORIZED,
-  ) {
+  constructor(message = 'Unauthorized', errorCode = ApiErrorCode.UNAUTHORIZED) {
     super(HttpStatus.UNAUTHORIZED, errorCode, message);
   }
 }
 
 export class ForbiddenError extends ApiError {
-  constructor(
-    message = 'Forbidden',
-    errorCode = ApiErrorCode.FORBIDDEN,
-  ) {
+  constructor(message = 'Forbidden', errorCode = ApiErrorCode.FORBIDDEN) {
     super(HttpStatus.FORBIDDEN, errorCode, message);
   }
 }

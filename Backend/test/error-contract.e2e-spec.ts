@@ -77,9 +77,12 @@ class FixtureController {
   /** Throws a generic ApiError */
   @Get('api-error')
   apiError() {
-    throw new ApiError(HttpStatus.BAD_REQUEST, ApiErrorCode.VALIDATION_ERROR, 'Custom validation error', [
-      'field must not be empty',
-    ]);
+    throw new ApiError(
+      HttpStatus.BAD_REQUEST,
+      ApiErrorCode.VALIDATION_ERROR,
+      'Custom validation error',
+      ['field must not be empty'],
+    );
   }
 
   /** Throws a NotFoundError */
@@ -319,9 +322,15 @@ describe('HealthModule error envelope (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
-        { provide: DatabaseHealthIndicator, useValue: mockDatabaseHealthIndicator },
+        {
+          provide: DatabaseHealthIndicator,
+          useValue: mockDatabaseHealthIndicator,
+        },
         { provide: RedisService, useValue: mockRedisService },
-        { provide: StellarEventMonitorService, useValue: mockStellarMonitorService },
+        {
+          provide: StellarEventMonitorService,
+          useValue: mockStellarMonitorService,
+        },
       ],
     }).compile();
 

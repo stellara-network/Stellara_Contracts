@@ -50,7 +50,11 @@ export class QueueJobTracingWrapper {
 
         const duration = (Date.now() - startTime) / 1000;
 
-        this.metricsService.recordJobCompleted(jobName, duration, correlationId);
+        this.metricsService.recordJobCompleted(
+          jobName,
+          duration,
+          correlationId,
+        );
 
         this.loggingService.info('Job processing completed', {
           traceId: traceContext.traceId,
@@ -135,7 +139,8 @@ export class QueueJobTracingWrapper {
         spanId: parentTraceContext.spanId,
         userId: parentTraceContext.userId,
       },
-      correlationId: parentTraceContext.metadata?.['correlationId'] || undefined,
+      correlationId:
+        parentTraceContext.metadata?.['correlationId'] || undefined,
     };
   }
 

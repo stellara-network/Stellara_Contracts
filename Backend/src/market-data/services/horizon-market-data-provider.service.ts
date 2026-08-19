@@ -32,9 +32,7 @@ export class HorizonMarketDataProvider implements MarketDataProvider {
         ? Asset.native()
         : new Asset(buyingCode, buyingIssuer);
 
-    this.logger.debug(
-      `Fetching orderbook: ${sellingCode}/${buyingCode}`,
-    );
+    this.logger.debug(`Fetching orderbook: ${sellingCode}/${buyingCode}`);
     return this.horizonServer.orderbook(selling, buying).limit(10).call();
   }
 

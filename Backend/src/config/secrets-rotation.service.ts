@@ -16,7 +16,9 @@ export interface SecretRotatedEvent {
 /**
  * Type-safe callback registered by consumers.
  */
-export type RotationHandler = (event: SecretRotatedEvent) => void | Promise<void>;
+export type RotationHandler = (
+  event: SecretRotatedEvent,
+) => void | Promise<void>;
 
 /**
  * SecretsRotationService
@@ -47,14 +49,19 @@ export type RotationHandler = (event: SecretRotatedEvent) => void | Promise<void
  * ```
  */
 @Injectable()
-export class SecretsRotationService extends EventEmitter implements OnModuleInit {
+export class SecretsRotationService
+  extends EventEmitter
+  implements OnModuleInit
+{
   private readonly logger = new Logger(SecretsRotationService.name);
 
   /** Registry of handlers keyed by secret name for quick lookup. */
   private readonly handlers = new Map<string, RotationHandler[]>();
 
   onModuleInit(): void {
-    this.logger.log('SecretsRotationService initialised — rotation hooks ready');
+    this.logger.log(
+      'SecretsRotationService initialised — rotation hooks ready',
+    );
   }
 
   /**
