@@ -1,0 +1,279 @@
+﻿cargo : warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+At line:1 char:1
++ cargo build 2>&1 | Out-File -FilePath build_errors.txt -Encoding UTF8
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: profil...workspace root::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package:   C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\contracts\cross-chain-router\Cargo.toml
+workspace: C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\Cargo.toml
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:111:26
+    |
+111 |             env.events().publish(
+    |                          ^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:130:14
+    |
+130 |             .publish((symbol_short!("cb_pause"),), (level as u32,));
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:156:14
+    |
+156 |             .publish((symbol_short!("cb_f_psd"), func_name), ());
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:179:14
+    |
+179 |             .publish((symbol_short!("cb_f_ups"), func_name), ());
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:345:22
+    |
+345 |         env.events().publish((topics::TRADE_EXECUTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:350:22
+    |
+350 |         env.events().publish((topics::CONTRACT_PAUSED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:355:22
+    |
+355 |         env.events().publish((topics::CONTRACT_UNPAUSED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:360:22
+    |
+360 |         env.events().publish((topics::FEE_COLLECTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:365:22
+    |
+365 |         env.events().publish((topics::PROPOSAL_CREATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:370:22
+    |
+370 |         env.events().publish((topics::PROPOSAL_APPROVED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:375:22
+    |
+375 |         env.events().publish((topics::PROPOSAL_REJECTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:380:22
+    |
+380 |         env.events().publish((topics::PROPOSAL_EXECUTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:385:22
+    |
+385 |         env.events().publish((topics::PROPOSAL_CANCELLED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:390:22
+    |
+390 |         env.events().publish((topics::REWARD_ADDED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:395:22
+    |
+395 |         env.events().publish((topics::REWARD_CLAIMED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:402:22
+    |
+402 |         env.events().publish((topics::POLICY_CREATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:407:22
+    |
+407 |         env.events().publish((topics::POLICY_CANCELLED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:412:22
+    |
+412 |         env.events().publish((topics::POLICY_EXPIRED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:417:22
+    |
+417 |         env.events().publish((topics::TRIGGER_ACTIVATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:422:22
+    |
+422 |         env.events().publish((topics::CLAIM_PAID,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:427:22
+    |
+427 |         env.events().publish((topics::LIQUIDITY_DEPOSITED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:432:22
+    |
+432 |         env.events().publish((topics::LIQUIDITY_WITHDRAWN,), event);
+    |                      ^^^^^^^
+
+warning: `shared` (lib) generated 22 warnings
+   Compiling trading v0.1.0 (C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\contracts\trading)
+error: symbol too long: length 13, max 9
+   --> contracts\trading\src\risk_management.rs:134:47
+    |
+134 |         let institutional_kyc = symbol_short!("institutional");
+    |                                               ^^^^^^^^^^^^^^^
+
+error: symbol too long: length 11, max 9
+   --> contracts\trading\src\risk_management.rs:151:49
+    |
+151 |     const CB_CONFIG_KEY: Symbol = symbol_short!("tier_cb_cfg");
+    |                                                 ^^^^^^^^^^^^^
+
+error: symbol too long: length 10, max 9
+   --> contracts\trading\src\risk_management.rs:152:48
+    |
+152 |     const CB_STATE_KEY: Symbol = symbol_short!("tier_cb_st");
+    |                                                ^^^^^^^^^^^^
+
+error: symbol too long: length 10, max 9
+   --> contracts\trading\src\risk_management.rs:350:57
+    |
+350 |                 cb_state.trigger_reason = symbol_short!("volatility");
+    |                                                         ^^^^^^^^^^^^
+
+warning: unused import: `Vec`
+ --> contracts\trading\src\risk_management.rs:3:74
+  |
+3 | use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Map, Vec};
+  |                                                                          ^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `LiquidityCheck`
+  --> contracts\trading\src\lib.rs:14:60
+   |
+14 | use risk_management::{RiskManager, RiskTier, RiskMetadata, LiquidityCheck, TieredCircuitBreakerState};
+   |                                                            ^^^^^^^^^^^^^^
+
+warning: the `#![no_std]` attribute can only be used at the crate root
+ --> contracts\trading\src\risk_management.rs:1:1
+  |
+1 | #![no_std]
+  | ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_attributes)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:323:10
+    |
+323 |         .publish((symbol_short!("cb_pause"),), (level as u32,));
+    |          ^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:347:10
+    |
+347 |         .publish((symbol_short!("cb_f_psd"), func_name), ());
+    |          ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:363:10
+    |
+363 |         .publish((symbol_short!("cb_f_ups"), func_name), ());
+    |          ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:657:18
+    |
+657 |     env.events().publish(
+    |                  ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:709:18
+    |
+709 |     env.events().publish(
+    |                  ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:807:22
+    |
+807 |         env.events().publish(
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:932:22
+    |
+932 |         env.events().publish(
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1023:22
+     |
+1023 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1104:22
+     |
+1104 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1612:14
+     |
+1612 |             .publish((symbol_short!("solv_sub"),), (trader, proof_hash));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1648:14
+     |
+1648 |             .publish((symbol_short!("bal_upd"),), (trader, commitment));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1739:22
+     |
+1739 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1779:14
+     |
+1779 |             .publish((symbol_short!("key_reg"),), (trader, version));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1836:14
+     |
+1836 |             .publish((symbol_short!("prv_audt"),), (audit_id, trade_id, auditor));
+     |              ^^^^^^^
+
+warning: `trading` (lib) generated 17 warnings
+error: could not compile `trading` (lib) due to 4 previous errors; 17 warnings emitted

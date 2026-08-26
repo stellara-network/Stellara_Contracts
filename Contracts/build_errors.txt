@@ -1,0 +1,1671 @@
+﻿cargo : warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+At line:1 char:1
++ cargo build --package trading 2>&1 | Out-File -FilePath build_errors. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: profil...workspace root::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+package:   C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\contracts\cross-chain-router\Cargo.toml
+workspace: C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\Cargo.toml
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:111:26
+    |
+111 |             env.events().publish(
+    |                          ^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:130:14
+    |
+130 |             .publish((symbol_short!("cb_pause"),), (level as u32,));
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:156:14
+    |
+156 |             .publish((symbol_short!("cb_f_psd"), func_name), ());
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\circuit_breaker.rs:179:14
+    |
+179 |             .publish((symbol_short!("cb_f_ups"), func_name), ());
+    |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:345:22
+    |
+345 |         env.events().publish((topics::TRADE_EXECUTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:350:22
+    |
+350 |         env.events().publish((topics::CONTRACT_PAUSED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:355:22
+    |
+355 |         env.events().publish((topics::CONTRACT_UNPAUSED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:360:22
+    |
+360 |         env.events().publish((topics::FEE_COLLECTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:365:22
+    |
+365 |         env.events().publish((topics::PROPOSAL_CREATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:370:22
+    |
+370 |         env.events().publish((topics::PROPOSAL_APPROVED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:375:22
+    |
+375 |         env.events().publish((topics::PROPOSAL_REJECTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:380:22
+    |
+380 |         env.events().publish((topics::PROPOSAL_EXECUTED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:385:22
+    |
+385 |         env.events().publish((topics::PROPOSAL_CANCELLED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:390:22
+    |
+390 |         env.events().publish((topics::REWARD_ADDED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:395:22
+    |
+395 |         env.events().publish((topics::REWARD_CLAIMED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:402:22
+    |
+402 |         env.events().publish((topics::POLICY_CREATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:407:22
+    |
+407 |         env.events().publish((topics::POLICY_CANCELLED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:412:22
+    |
+412 |         env.events().publish((topics::POLICY_EXPIRED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:417:22
+    |
+417 |         env.events().publish((topics::TRIGGER_ACTIVATED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:422:22
+    |
+422 |         env.events().publish((topics::CLAIM_PAID,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:427:22
+    |
+427 |         env.events().publish((topics::LIQUIDITY_DEPOSITED,), event);
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> shared\src\events.rs:432:22
+    |
+432 |         env.events().publish((topics::LIQUIDITY_WITHDRAWN,), event);
+    |                      ^^^^^^^
+
+warning: `shared` (lib) generated 22 warnings
+   Compiling trading v0.1.0 (C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\contracts\trading)
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `TieredCircuitBreakerState: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `TieredCircuitBreakerState`
+   --> contracts\trading\src\risk_management.rs:81:1
+    |
+ 81 | pub struct TieredCircuitBreakerState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+  --> contracts\trading\src\risk_management.rs:33:1
+   |
+33 | #[contracttype]
+   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+  --> contracts\trading\src\risk_management.rs:6:1
+   |
+ 6 | pub enum RiskTier {
+   | ^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `TryFromVal<E, V>`:
+             `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+             `()` implements `TryFromVal<E, soroban_sdk::Val>`
+             `()` implements `TryFromVal<Env, ()>`
+             `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+             `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+             `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+             `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+             `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+           and 663 others
+   = note: required for `soroban_sdk::Val` to implement `TryIntoVal<Env, RiskTier>`
+   = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+   = note: this error originates in the attribute macro `contracttype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+  --> contracts\trading\src\risk_management.rs:33:1
+   |
+33 | #[contracttype]
+   | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+   |
+   = help: the following other types implement trait `TryFromVal<E, V>`:
+             `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+           and 363 others
+   = note: required for `RiskTier` to implement `TryIntoVal<Env, soroban_sdk::Val>`
+   = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+   = note: this error originates in the attribute macro `contracttype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+  --> contracts\trading\src\risk_management.rs:46:1
+   |
+46 | #[contracttype]
+   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+  --> contracts\trading\src\risk_management.rs:6:1
+   |
+ 6 | pub enum RiskTier {
+   | ^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `TryFromVal<E, V>`:
+             `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+             `()` implements `TryFromVal<E, soroban_sdk::Val>`
+             `()` implements `TryFromVal<Env, ()>`
+             `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+             `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+             `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+             `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+             `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+           and 663 others
+   = note: required for `soroban_sdk::Val` to implement `TryIntoVal<Env, RiskTier>`
+   = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+   = note: this error originates in the attribute macro `contracttype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+  --> contracts\trading\src\risk_management.rs:46:1
+   |
+46 | #[contracttype]
+   | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+   |
+   = help: the following other types implement trait `TryFromVal<E, V>`:
+             `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+             `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+           and 363 others
+   = note: required for `RiskTier` to implement `TryIntoVal<Env, soroban_sdk::Val>`
+   = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+   = note: this error originates in the attribute macro `contracttype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:150:63
+    |
+150 |         let mut tier_configs: Map<RiskTier, RiskTierConfig> = Map::new(env);
+    |                                                               ^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `soroban_sdk::Map::<K, V>::new`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\map.rs:323:28
+    |
+323 |     K: IntoVal<Env, Val> + TryFromVal<Env, Val>,
+    |                            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Map::<K, V>::new`
+...
+328 |     pub fn new(env: &Env) -> Map<K, V> {
+    |            --- required by a bound in this associated function
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:150:63
+    |
+150 |         let mut tier_configs: Map<RiskTier, RiskTierConfig> = Map::new(env);
+    |                                                               ^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `soroban_sdk::Map::<K, V>::new`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\map.rs:324:28
+    |
+324 |     V: IntoVal<Env, Val> + TryFromVal<Env, Val>,
+    |                            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Map::<K, V>::new`
+...
+328 |     pub fn new(env: &Env) -> Map<K, V> {
+    |            --- required by a bound in this associated function
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:150:63
+    |
+150 |         let mut tier_configs: Map<RiskTier, RiskTierConfig> = Map::new(env);
+    |                                                               ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for 
+`soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::Map::<K, V>::new`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\map.rs:323:8
+    |
+323 |     K: IntoVal<Env, Val> + TryFromVal<Env, Val>,
+    |        ^^^^^^^^^^^^^^^^^ required by this bound in `Map::<K, V>::new`
+...
+328 |     pub fn new(env: &Env) -> Map<K, V> {
+    |            --- required by a bound in this associated function
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:150:63
+    |
+150 |         let mut tier_configs: Map<RiskTier, RiskTierConfig> = Map::new(env);
+    |                                                               ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not 
+implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::Map::<K, V>::new`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\map.rs:324:8
+    |
+324 |     V: IntoVal<Env, Val> + TryFromVal<Env, Val>,
+    |        ^^^^^^^^^^^^^^^^^ required by this bound in `Map::<K, V>::new`
+...
+328 |     pub fn new(env: &Env) -> Map<K, V> {
+    |            --- required by a bound in this associated function
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: the method `set` exists for struct `soroban_sdk::Map<RiskTier, RiskTierConfig>`, but its trait bounds were not satisfied
+   --> contracts\trading\src\risk_management.rs:153:26
+    |
+  6 | pub enum RiskTier {
+    | ----------------- doesn't satisfy `RiskTier: IntoVal<Env, soroban_sdk::Val>` or `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+...
+ 19 | pub struct RiskTierConfig {
+    | ------------------------- doesn't satisfy `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>` or `RiskTierConfig: TryFromVal<Env, 
+soroban_sdk::Val>`
+...
+153 |             tier_configs.set(tier, RiskTier::default_config(env, tier));
+    |                          ^^^ method cannot be called on `soroban_sdk::Map<RiskTier, RiskTierConfig>` due to unsatisfied trait bounds
+    |
+   ::: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\val.rs:252:1
+    |
+252 | pub struct Val(u64);
+    | -------------- doesn't satisfy `soroban_sdk::Val: TryFromVal<Env, RiskTier>` or `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+            `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTier>`
+            which is required by `RiskTier: IntoVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+            which is required by `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>`
+note: the trait `TryFromVal` must be implemented
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\convert.rs:42:1
+    |
+ 42 | pub trait TryFromVal<E: Env, V: ?Sized>: Sized {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:156:64
+    |
+156 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ unsatisfied trait bound
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:156:64
+    |
+156 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ unsatisfied trait bound
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:156:64
+    |
+156 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented 
+for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: 2 redundant requirements hidden
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:156:64
+    |
+156 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: 2 redundant requirements hidden
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:177:62
+    |
+177 |         env.storage().persistent().set(&Self::CB_CONFIG_KEY, &cb_config);
+    |                                    ---                       ^^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerConfig>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerConfig>`
+    = note: required for `TieredCircuitBreakerConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerState>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:187:61
+    |
+187 |         env.storage().persistent().set(&Self::CB_STATE_KEY, &cb_state);
+    |                                    ---                      ^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerState>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerState>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: the method `get` exists for struct `soroban_sdk::Map<RiskTier, RiskTierConfig>`, but its trait bounds were not satisfied
+   --> contracts\trading\src\risk_management.rs:239:22
+    |
+  6 | pub enum RiskTier {
+    | ----------------- doesn't satisfy `RiskTier: IntoVal<Env, soroban_sdk::Val>` or `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+...
+ 19 | pub struct RiskTierConfig {
+    | ------------------------- doesn't satisfy `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>` or `RiskTierConfig: TryFromVal<Env, 
+soroban_sdk::Val>`
+...
+239 |         tier_configs.get(tier).expect("Tier config not found")
+    |                      ^^^ method cannot be called on `soroban_sdk::Map<RiskTier, RiskTierConfig>` due to unsatisfied trait bounds
+    |
+   ::: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\val.rs:252:1
+    |
+252 | pub struct Val(u64);
+    | -------------- doesn't satisfy `soroban_sdk::Val: TryFromVal<Env, RiskTier>` or `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+            `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTier>`
+            which is required by `RiskTier: IntoVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+            which is required by `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>`
+note: the trait `TryFromVal` must be implemented
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\convert.rs:42:1
+    |
+ 42 | pub trait TryFromVal<E: Env, V: ?Sized>: Sized {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:236:14
+    |
+236 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:236:14
+    |
+236 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:236:14
+    |
+236 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:236:14
+    |
+236 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `TieredCircuitBreakerConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:311:14
+    |
+311 |             .get(&Self::CB_CONFIG_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `TieredCircuitBreakerConfig`
+   --> contracts\trading\src\risk_management.rs:70:1
+    |
+ 70 | pub struct TieredCircuitBreakerConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `soroban_sdk::storage::Persistent::get`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:347:12
+    |
+343 |     pub fn get<K, V>(&self, key: &K) -> Option<V>
+    |            --- required by a bound in this associated function
+...
+347 |         V: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::get`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `TieredCircuitBreakerState: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:317:14
+    |
+317 |             .get(&Self::CB_STATE_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `TieredCircuitBreakerState`
+   --> contracts\trading\src\risk_management.rs:81:1
+    |
+ 81 | pub struct TieredCircuitBreakerState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `soroban_sdk::storage::Persistent::get`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:347:12
+    |
+343 |     pub fn get<K, V>(&self, key: &K) -> Option<V>
+    |            --- required by a bound in this associated function
+...
+347 |         V: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::get`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerState>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:346:69
+    |
+346 |                 env.storage().persistent().set(&Self::CB_STATE_KEY, &cb_state);
+    |                                            ---                      ^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerState>` is 
+not implemented for `soroban_sdk::Val`
+    |                                            |
+    |                                            required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerState>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerState>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:354:61
+    |
+354 |         env.storage().persistent().set(&Self::CB_STATE_KEY, &cb_state);
+    |                                    ---                      ^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerState>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerState>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `TieredCircuitBreakerState: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:387:14
+    |
+387 |             .get(&Self::CB_STATE_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `TieredCircuitBreakerState`
+   --> contracts\trading\src\risk_management.rs:81:1
+    |
+ 81 | pub struct TieredCircuitBreakerState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `soroban_sdk::storage::Persistent::get`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:347:12
+    |
+343 |     pub fn get<K, V>(&self, key: &K) -> Option<V>
+    |            --- required by a bound in this associated function
+...
+347 |         V: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::get`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerState>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:400:61
+    |
+400 |         env.storage().persistent().set(&Self::CB_STATE_KEY, &cb_state);
+    |                                    ---                      ^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerState>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerState>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: the method `set` exists for struct `soroban_sdk::Map<RiskTier, RiskTierConfig>`, but its trait bounds were not satisfied
+   --> contracts\trading\src\risk_management.rs:411:22
+    |
+  6 | pub enum RiskTier {
+    | ----------------- doesn't satisfy `RiskTier: IntoVal<Env, soroban_sdk::Val>` or `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+...
+ 19 | pub struct RiskTierConfig {
+    | ------------------------- doesn't satisfy `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>` or `RiskTierConfig: TryFromVal<Env, 
+soroban_sdk::Val>`
+...
+411 |         tier_configs.set(tier, config);
+    |                      ^^^ method cannot be called on `soroban_sdk::Map<RiskTier, RiskTierConfig>` due to unsatisfied trait bounds
+    |
+   ::: C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\val.rs:252:1
+    |
+252 | pub struct Val(u64);
+    | -------------- doesn't satisfy `soroban_sdk::Val: TryFromVal<Env, RiskTier>` or `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+    |
+    = note: the following trait bounds were not satisfied:
+            `RiskTier: TryFromVal<Env, soroban_sdk::Val>`
+            `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTier>`
+            which is required by `RiskTier: IntoVal<Env, soroban_sdk::Val>`
+            `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>`
+            which is required by `RiskTierConfig: IntoVal<Env, soroban_sdk::Val>`
+note: the trait `TryFromVal` must be implemented
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-env-common-26.1.3\src\convert.rs:42:1
+    |
+ 42 | pub trait TryFromVal<E: Env, V: ?Sized>: Sized {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:408:14
+    |
+408 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:408:14
+    |
+408 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:408:14
+    |
+408 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:408:14
+    |
+408 |             .get(&Self::TIER_CONFIG_KEY)
+    |              ^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `TryFromVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:412:64
+    |
+412 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ unsatisfied trait bound
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:412:64
+    |
+412 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ unsatisfied trait bound
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:412:64
+    |
+412 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented 
+for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: 2 redundant requirements hidden
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\risk_management.rs:412:64
+    |
+412 |         env.storage().persistent().set(&Self::TIER_CONFIG_KEY, &tier_configs);
+    |                                    ---                         ^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not 
+implemented for `soroban_sdk::Val`
+    |                                    |
+    |                                    required by a bound introduced by this call
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, soroban_sdk::Map<RiskTier, RiskTierConfig>>`
+    = note: 2 redundant requirements hidden
+    = note: required for `soroban_sdk::Map<RiskTier, RiskTierConfig>` to implement `IntoVal<Env, soroban_sdk::Val>`
+note: required by a bound in `soroban_sdk::storage::Persistent::set`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\storage.rs:355:12
+    |
+352 |     pub fn set<K, V>(&self, key: &K, val: &V)
+    |            --- required by a bound in this associated function
+...
+355 |         V: IntoVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^ required by this bound in `Persistent::set`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:323:10
+    |
+323 |         .publish((symbol_short!("cb_pause"),), (level as u32,));
+    |          ^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:347:10
+    |
+347 |         .publish((symbol_short!("cb_f_psd"), func_name), ());
+    |          ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:363:10
+    |
+363 |         .publish((symbol_short!("cb_f_ups"), func_name), ());
+    |          ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:657:18
+    |
+657 |     env.events().publish(
+    |                  ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:709:18
+    |
+709 |     env.events().publish(
+    |                  ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:807:22
+    |
+807 |         env.events().publish(
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+   --> contracts\trading\src\lib.rs:932:22
+    |
+932 |         env.events().publish(
+    |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1023:22
+     |
+1023 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1104:22
+     |
+1104 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1612:14
+     |
+1612 |             .publish((symbol_short!("solv_sub"),), (trader, proof_hash));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1648:14
+     |
+1648 |             .publish((symbol_short!("bal_upd"),), (trader, commitment));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1739:22
+     |
+1739 |         env.events().publish(
+     |                      ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1779:14
+     |
+1779 |             .publish((symbol_short!("key_reg"),), (trader, version));
+     |              ^^^^^^^
+
+warning: use of deprecated method `soroban_sdk::events::Events::publish`: use the #[contractevent] macro on a contract event type
+    --> contracts\trading\src\lib.rs:1836:14
+     |
+1836 |             .publish((symbol_short!("prv_audt"),), (audit_id, trade_id, auditor));
+     |              ^^^^^^^
+
+error[E0277]: the trait bound `RiskTier: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `Env::invoke_contract`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\env.rs:415:12
+    |
+408 |     pub fn invoke_contract<T>(
+    |            --------------- required by a bound in this associated function
+...
+415 |         T: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Env::invoke_contract`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTier>`
+    = note: required for `RiskTier` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `Env::invoke_contract`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\env.rs:415:12
+    |
+408 |     pub fn invoke_contract<T>(
+    |            --------------- required by a bound in this associated function
+...
+415 |         T: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Env::invoke_contract`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `TieredCircuitBreakerState: TryFromVal<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `TieredCircuitBreakerState`
+   --> contracts\trading\src\risk_management.rs:81:1
+    |
+ 81 | pub struct TieredCircuitBreakerState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+note: required by a bound in `Env::invoke_contract`
+   --> C:\Users\User\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\soroban-sdk-26.0.0\src\env.rs:415:12
+    |
+408 |     pub fn invoke_contract<T>(
+    |            --------------- required by a bound in this associated function
+...
+415 |         T: TryFromVal<Env, Val>,
+    |            ^^^^^^^^^^^^^^^^^^^^ required by this bound in `Env::invoke_contract`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `soroban_sdk::contractclient` (in Nightly builds, run with -Z macro-backtrace for 
+more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTier>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTier>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `TryFromVal<Env, core::result::Result<RiskTier, TradeError>>`
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, core::result::Result<RiskTier, TradeError>>`
+    = note: required for `core::result::Result<RiskTier, TradeError>` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `core::result::Result<RiskTier, TradeError>` to implement `IntoValForContractFn`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `contractimpl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `RiskTier: TryFromValForContractFn<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTier`
+   --> contracts\trading\src\risk_management.rs:6:1
+    |
+  6 | pub enum RiskTier {
+    | ^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `RiskTier` to implement `TryFromValForContractFn<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `contractimpl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, RiskTierConfig>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, RiskTierConfig>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, RiskTierConfig>`
+    = note: required for `RiskTierConfig` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `RiskTierConfig` to implement `IntoValForContractFn`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `contractimpl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `RiskTierConfig: TryFromValForContractFn<Env, soroban_sdk::Val>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `TryFromVal<Env, soroban_sdk::Val>` is not implemented for `RiskTierConfig`
+   --> contracts\trading\src\risk_management.rs:19:1
+    |
+ 19 | pub struct RiskTierConfig {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `()` implements `TryFromVal<E, [soroban_sdk::Val; 0]>`
+              `()` implements `TryFromVal<E, soroban_sdk::Val>`
+              `()` implements `TryFromVal<Env, ()>`
+              `(T0, T1)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+              `(T0, T1, T2)` implements `TryFromVal<E, soroban_sdk::Val>`
+              `(T0, T1, T2, T3)` implements `TryFromVal<E, [soroban_sdk::Val; N]>`
+            and 663 others
+    = note: required for `RiskTierConfig` to implement `TryFromValForContractFn<Env, soroban_sdk::Val>`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `contractimpl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `soroban_sdk::Val: TryFromVal<Env, TieredCircuitBreakerState>` is not satisfied
+   --> contracts\trading\src\lib.rs:823:1
+    |
+823 | #[contractimpl]
+    | ^^^^^^^^^^^^^^^ the trait `TryFromVal<Env, TieredCircuitBreakerState>` is not implemented for `soroban_sdk::Val`
+    |
+    = help: the following other types implement trait `TryFromVal<E, V>`:
+              `soroban_sdk::Val` implements `TryFromVal<E, &()>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6)>`
+              `soroban_sdk::Val` implements `TryFromVal<E, &(T0, T1, T2, T3, T4, T5, T6, T7)>`
+            and 363 others
+    = note: required for `soroban_sdk::Val` to implement `FromVal<Env, TieredCircuitBreakerState>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoVal<Env, soroban_sdk::Val>`
+    = note: required for `TieredCircuitBreakerState` to implement `IntoValForContractFn`
+    = note: the full name for the type has been written to 
+'C:\Users\User\OneDrive\Documents\Stellara_Contracts\Contracts\target\debug\deps\trading.long-type-11622600792159703233.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: this error originates in the attribute macro `contractimpl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+Some errors have detailed explanations: E0277, E0599.
+For more information about an error, try `rustc --explain E0277`.
+warning: `trading` (lib) generated 14 warnings
+error: could not compile `trading` (lib) due to 53 previous errors; 14 warnings emitted

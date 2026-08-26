@@ -237,6 +237,7 @@ fn test_trading_interacts_with_fee_distribution() {
         &token_id,
         &25i128,
         &fee_recipient,
+        &10_001_000i128,
     );
 
     assert_eq!(trade_id, 1);

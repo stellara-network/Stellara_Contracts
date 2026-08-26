@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import { buildRedisUrl } from './redis.config';
 
 /**
  * Standalone Redis client used outside of the NestJS DI container
@@ -16,7 +17,7 @@ function maskRedisUrl(url: string): string {
 }
 
 export const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  url: buildRedisUrl(),
 });
 
 redisClient.on('error', (err: Error) => {

@@ -49,6 +49,55 @@ real values.
 `SecretsRotationService` (`src/config/secrets-rotation.service.ts`) provides
 an in-process event bus for rotation signals.
 
+### HTTP Rotation Endpoint
+
+The application provides a secure HTTP endpoint for runtime secret rotation:
+- **Endpoint**: `POST /api/secrets/rotate`
+- **Authentication**: Requires JWT token with admin role
+- **Validation**: New secret values are validated before application
+- **Auditing**: All rotations are logged with actor, timestamp, and reason
+
+#### Rotation Request Format
+
+```json
+{
+  "secretKey": "JWT_SECRET",
+  "newValue": "new-secret-value-here",
+  "reason": "manual",
+  "actorId": "user-123"
+}
+```
+
+#### Supported Secret Keys
+
+- `JWT_SECRET` - JWT signing key (min 32 chars, base64)
+- `DB_PASSWORD` - Database password (min 16 chars)
+- `REDIS_PASSWORD` - Redis password (min 8 chars)
+- `REDIS_URL` - Redis connection URL (must match redis:// or rediss://)
+- `VAULT_TOKEN` - Vault authentication token (min 20 chars)
+- `LLM_API_KEY` - LLM service API key (format: sk-*)
+- `STRIPE_SECRET_KEY` - Stripe secret key (format: sk_test_* or sk_live_*)
+- `WEBHOOK_SECRET_KEY` - Webhook signature key (64-char hex)
+
+#### Example Rotation via API
+
+```bash
+# Get admin token first
+TOKEN=$(curl -X POST http://localhost:3000/api/auth/wallet/login \
+  -H "Content-Type: application/json" \
+  -d '{"publicKey":"...","signature":"...","nonce":"..."}' | jq -r '.accessToken')
+
+# Rotate JWT_SECRET
+curl -X POST http://localhost:3000/api/secrets/rotate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secretKey": "JWT_SECRET",
+    "newValue": "new-secure-jwt-secret-base64-encoded",
+    "reason": "manual"
+  }'
+```
+
 ### Registering a Rotation Handler
 
 ```typescript
@@ -68,18 +117,18 @@ export class MyService implements OnModuleInit {
 }
 ```
 
-### Triggering a Rotation
+### Triggering a Rotation via Script
 
-The `provision-dev.sh` script sends an HTTP notification to the running app:
+The `rotate-secrets.sh` script provides command-line rotation:
 
 ```bash
 # Rotate a single secret
-./scripts/vault/provision-dev.sh rotate-jwt
-./scripts/vault/provision-dev.sh rotate-redis
-./scripts/vault/provision-dev.sh rotate-db
+./scripts/vault/rotate-secrets.sh jwt-secret
+./scripts/vault/rotate-secrets.sh redis-password
+./scripts/vault/rotate-secrets.sh db-password
 
 # Rotate everything at once
-./scripts/vault/provision-dev.sh rotate-all
+./scripts/vault/rotate-secrets.sh all
 ```
 
 You can also call the service programmatically (e.g. from a Vault renew
@@ -99,6 +148,31 @@ await rotationService.notifyBulkRotation(['JWT_SECRET', 'DB_PASSWORD'], 'schedul
 |---|---|---|
 | `REDIS_URL` | `RedisService.onModuleInit` | Reconnects all three Redis clients |
 | `REDIS_PASSWORD` | `RedisService.onModuleInit` | Reconnects all three Redis clients |
+
+### Rotation Validation Rules
+
+Each secret type has specific validation rules that must be met before rotation:
+
+| Secret | Validation Rule |
+|---|---|
+| `JWT_SECRET` | Minimum 32 characters, base64 characters only |
+| `DB_PASSWORD` | Minimum 16 characters, no weak/default values |
+| `REDIS_PASSWORD` | Minimum 8 characters, no weak/default values |
+| `REDIS_URL` | Must match `redis://` or `rediss://` pattern |
+| `VAULT_TOKEN` | Minimum 20 characters |
+| `LLM_API_KEY` | Format: `sk-[a-zA-Z0-9]+`, minimum 10 characters |
+| `STRIPE_SECRET_KEY` | Format: `sk_(test\|live)_[a-zA-Z0-9]+` |
+| `WEBHOOK_SECRET_KEY` | Exactly 64 hexadecimal characters |
+
+### Audit Logging
+
+All rotation operations are logged to the audit log with:
+- **Action Type**: `SECRET_ROTATED` or `SECRET_ROTATION_FAILED`
+- **Actor ID**: User or service performing the rotation
+- **Entity ID**: The secret key being rotated
+- **Metadata**: Includes rotation reason, old value (masked), and new value length
+
+Failed rotations are also audited with the specific error reason.
 
 ---
 
@@ -337,7 +411,68 @@ chmod 600 .env.local  # Restrict permissions
 
 ⚠️ **SECURITY WARNING**: `.env.local` is only for local development with non-sensitive values. Never commit this file.
 
-## Secret Rotation
+## Secret Rotation Procedures
+
+### Operator Procedures for Secret Rotation
+
+#### 1. Prerequisites
+- Ensure you have admin privileges (JWT token with admin role)
+- Verify the application is running and accessible
+- Have the new secret value ready and validated
+- Ensure backup/rollback plan is in place
+
+#### 2. Rotation Steps via HTTP API
+
+```bash
+# Step 1: Authenticate as admin
+TOKEN=$(curl -X POST http://localhost:3000/api/auth/wallet/login \
+  -H "Content-Type: application/json" \
+  -d '{"publicKey":"ADMIN_PUBLIC_KEY","signature":"SIGNATURE","nonce":"NONCE"}' \
+  | jq -r '.accessToken')
+
+# Step 2: Rotate the secret
+curl -X POST http://localhost:3000/api/secrets/rotate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secretKey": "JWT_SECRET",
+    "newValue": "new-secure-value-here",
+    "reason": "manual"
+  }'
+
+# Step 3: Verify rotation success
+curl -X GET http://localhost:3000/api/secrets/status \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### 3. Rotation Steps via Script
+
+```bash
+# Using the dedicated rotation script
+./scripts/vault/rotate-secrets.sh jwt-secret
+
+# The script will:
+# 1. Validate the new secret format
+# 2. Update Vault if enabled
+# 3. Notify the running application via HTTP
+# 4. Wait for confirmation
+# 5. Log the rotation to audit log
+```
+
+#### 4. Emergency Rollback
+
+If a rotation causes issues:
+
+```bash
+# 1. Revert the secret in Vault to previous version
+vault kv rollback kv/stellara/auth/jwt -version=previous_version
+
+# 2. Force rotation of the reverted value
+./scripts/vault/rotate-secrets.sh jwt-secret
+
+# 3. Monitor application logs for errors
+# 4. Verify connections are re-established
+```
 
 ### Database Password Rotation
 
@@ -351,8 +486,11 @@ vault kv patch kv/stellara/database/postgres password=$NEW_PASSWORD
 # 3. Update database user password
 psql -U postgres -c "ALTER USER postgres WITH PASSWORD '$NEW_PASSWORD';"
 
-# 4. Rotate database connection in services
-# Services will pick up new credentials on next restart or config reload
+# 4. Rotate via HTTP endpoint (triggers connection pool refresh)
+curl -X POST http://localhost:3000/api/secrets/rotate \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"secretKey":"DB_PASSWORD","newValue":"'$NEW_PASSWORD'","reason":"manual"}'
 
 # 5. Update any backup/disaster recovery documentation
 ```
@@ -368,9 +506,14 @@ vault kv patch kv/stellara/auth/jwt \
   current=$NEW_JWT_SECRET \
   previous=$(vault kv get -field=current kv/stellara/auth/jwt)
 
-# 3. Services pick up new secret on restart
+# 3. Rotate via HTTP endpoint
+curl -X POST http://localhost:3000/api/secrets/rotate \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"secretKey":"JWT_SECRET","newValue":"'$NEW_JWT_SECRET'","reason":"manual"}'
 
 # 4. Old tokens remain valid until expiration
+# 5. Monitor for authentication errors during transition
 ```
 
 ### Stripe Key Rotation
@@ -382,7 +525,14 @@ Follow Stripe's standard key rotation:
 # 2. Update Vault
 vault kv patch kv/stellara/external/stripe secret-key=<new-key>
 
-# 3. Services will use new key after restart
+# 3. Rotate via HTTP endpoint
+curl -X POST http://localhost:3000/api/secrets/rotate \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"secretKey":"STRIPE_SECRET_KEY","newValue":"<new-key>","reason":"manual"}'
+
+# 4. Services will use new key after rotation
+# 5. Keep old key for grace period in case of cached values
 # 4. Keep old key for grace period in case of cached values
 ```
 

@@ -19,6 +19,9 @@ pub mod topics {
     pub const CONTRACT_PAUSED: Symbol = symbol_short!("paused");
     pub const CONTRACT_UNPAUSED: Symbol = symbol_short!("unpause");
     pub const FEE_COLLECTED: Symbol = symbol_short!("fee");
+        // Audit logging
+    pub const AUDIT_ACTION: Symbol = symbol_short!("audit_ac");
+    pub const ACCESS_DENIED: Symbol = symbol_short!("acc_den");
 
     // Governance events
     pub const PROPOSAL_CREATED: Symbol = symbol_short!("propose");
@@ -795,4 +798,58 @@ pub mod extended_topics {
     pub const VESTING_GRANTED: Symbol         = symbol_short!("v_grant");
     pub const VESTING_CLAIMED: Symbol         = symbol_short!("v_claim");
     pub const VESTING_REVOKED: Symbol         = symbol_short!("v_revoke");
+} 
+// =============================================================================
+// Audit Logging Events
+// =============================================================================
+
+/// Generic structured event for any admin/governance state mutation.
+/// Emitted alongside (not instead of) each contract's existing
+/// domain-specific event, to give compliance/off-chain tooling a single
+/// standardized shape to index across all contracts.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct AuditActionEvent {
+    /// Address that performed the action
+    pub actor: Address,
+    /// Short name of the operation, e.g. "pause", "set_rate_limit"
+    pub operation: Symbol,
+    /// Human/machine-readable summary of the prior value (symbol-encoded;
+    /// use "none" when not applicable, e.g. for a first-time set)
+    pub old_value: Symbol,
+    /// Summary of the new value being set
+    pub new_value: Symbol,
+    /// Correlation ID for off-chain log aggregation — callers should pass
+    /// a per-call-site constant symbol (e.g. the operation name) unless a
+    /// request-scoped ID is available
+    pub correlation_id: Symbol,
+    /// Block timestamp
+    pub timestamp: u64,
+}
+
+/// Emitted when an address attempts an action it does not have
+/// permission for. Distinct from silent `Err(Unauthorized)` returns so
+/// security monitoring can index attempted-but-denied actions.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct AccessDeniedEvent {
+    /// Address that attempted the action
+    pub actor: Address,
+    /// The permission or role that was required
+    pub required_permission: Symbol,
+    /// Short identifier of the resource/function being accessed
+    pub resource: Symbol,
+    pub timestamp: u64,
+}
+
+impl EventEmitter {
+    /// Emit a standardized audit event for an admin/governance mutation.
+    pub fn audit_action(env: &Env, event: AuditActionEvent) {
+        env.events().publish((topics::AUDIT_ACTION,), event);
+    }
+
+    /// Emit an access-denied security event.
+    pub fn access_denied(env: &Env, event: AccessDeniedEvent) {
+        env.events().publish((topics::ACCESS_DENIED,), event);
+    }
 }

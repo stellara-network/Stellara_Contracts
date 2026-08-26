@@ -55,6 +55,7 @@ impl GasBenchmark {
             &token_id,
             &0i128,
             &fee_recipient,
+            &1_000_000_000i128, // pool_liquidity
         );
 
         // Get measurements
@@ -102,6 +103,7 @@ impl GasBenchmark {
                 &token_id,
                 &0i128,
                 &fee_recipient,
+                &1_000_000_000i128, // pool_liquidity
             );
 
             let cpu_insns = env.budget().cpu_instruction_cost();

@@ -12,17 +12,20 @@ import { RedisModule } from '../redis/redis.module';
 import { ObservabilityModule } from '../observability/observability.module';
 import { QueueJobTracingWrapper } from '../observability/middleware/queue-job-tracing.wrapper';
 import type { Queue } from 'bull';
+import { buildBullRedisOptions } from '../redis/redis.config';
 
 @Module({
   imports: [
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST') || 'localhost',
-          port: configService.get('REDIS_PORT') || 6379,
-          db: configService.get('REDIS_QUEUE_DB') || 1,
-        },
+        redis: buildBullRedisOptions({
+          REDIS_URL: configService.get('REDIS_URL'),
+          REDIS_HOST: configService.get('REDIS_HOST'),
+          REDIS_PORT: configService.get('REDIS_PORT'),
+          REDIS_PASSWORD: configService.get('REDIS_PASSWORD'),
+          REDIS_QUEUE_DB: configService.get('REDIS_QUEUE_DB'),
+        }),
         defaultJobOptions: {
           attempts: 3,
           backoff: {

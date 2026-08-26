@@ -348,6 +348,7 @@ fn test_optimized_trade_execution() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     assert_eq!(trade_id, 1);
@@ -378,17 +379,19 @@ fn test_optimized_trade_signed_amount() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let sell_id = client.trade(
         &trader,
         &symbol_short!("BTCUSD"),
         &500_000i128,
-        &49_000i128,
+        &50_000i128,
         &false,
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     assert_eq!(buy_id, 1);
@@ -420,6 +423,7 @@ fn test_optimized_get_trade() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let trade = client.get_trade(&trade_id);
@@ -444,7 +448,7 @@ fn test_optimized_get_recent_trades() {
     let token_id = env.register_stellar_asset_contract(fee_recipient.clone());
 
     for i in 1..=5 {
-        client.trade(
+        let trade_id = client.trade(
             &trader,
             &symbol_short!("BTCUSD"),
             &(i as i128 * 100_000),
@@ -453,7 +457,9 @@ fn test_optimized_get_recent_trades() {
             &token_id,
             &0i128,
             &fee_recipient,
+            &1_000_000_000i128, // pool_liquidity
         );
+        assert_eq!(trade_id, i as u64);
     }
 
     let recent = client.get_recent_trades(&3u32);
@@ -487,6 +493,7 @@ fn test_optimized_pause_unpause() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
     assert!(result.is_err());
 
@@ -501,6 +508,7 @@ fn test_optimized_pause_unpause() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
     assert_eq!(trade_id, 1);
 }
@@ -527,6 +535,7 @@ fn test_optimized_storage_scaling() {
             &token_id,
             &0i128,
             &fee_recipient,
+            &1_000_000_000i128, // pool_liquidity
         );
         assert_eq!(trade_id, i as u64);
     }
@@ -683,6 +692,7 @@ fn test_batch_trade_gas_efficiency() {
             &token_id,
             &0i128,
             &fee_recipient,
+            &1_000_000_000i128, // pool_liquidity
         );
     }
     let _individual_cpu = env.budget().cpu_instruction_cost();
@@ -738,6 +748,7 @@ fn test_optimized_storage_access_pattern() {
         &token_id,
         &0i128,
         &fee_recipient,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let _cpu_cost = env.budget().cpu_instruction_cost();
@@ -766,6 +777,7 @@ fn test_create_limit_order() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     assert_eq!(order_id, 1);
@@ -799,6 +811,7 @@ fn test_cancel_order() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     client.cancel_order(&trader, &order_id);
@@ -824,9 +837,10 @@ fn test_limit_order_matching_full_fill() {
         &seller,
         &symbol_short!("BTCUSD"),
         &false,
-        &49_000i128,
+        &50_000i128,
         &1_000i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order_id = client.create_limit_order(
@@ -836,6 +850,7 @@ fn test_limit_order_matching_full_fill() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let sell_order = client.get_order(&sell_order_id).unwrap();
@@ -870,9 +885,10 @@ fn test_limit_order_partial_fill() {
         &seller,
         &symbol_short!("BTCUSD"),
         &false,
-        &49_000i128,
+        &50_000i128,
         &2_000i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order_id = client.create_limit_order(
@@ -882,6 +898,7 @@ fn test_limit_order_partial_fill() {
         &50_000i128,
         &500i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let sell_order = client.get_order(&sell_order_id).unwrap();
@@ -912,9 +929,10 @@ fn test_ioc_order_cancels_unfilled_remainder() {
         &seller,
         &symbol_short!("BTCUSD"),
         &false,
-        &49_000i128,
+        &50_000i128,
         &400i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order_id = client.create_limit_order(
@@ -924,6 +942,7 @@ fn test_ioc_order_cancels_unfilled_remainder() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Ioc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order = client.get_order(&buy_order_id).unwrap();
@@ -948,9 +967,10 @@ fn test_fok_order_requires_full_liquidity() {
         &seller,
         &symbol_short!("BTCUSD"),
         &false,
-        &49_000i128,
+        &50_000i128,
         &400i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let result = client.try_create_limit_order(
@@ -960,6 +980,7 @@ fn test_fok_order_requires_full_liquidity() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Fok,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     assert!(result.is_err());
@@ -983,9 +1004,10 @@ fn test_fok_order_executes_when_fully_fillable() {
         &seller1,
         &symbol_short!("BTCUSD"),
         &false,
-        &49_000i128,
+        &50_000i128,
         &400i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     client.create_limit_order(
@@ -995,6 +1017,7 @@ fn test_fok_order_executes_when_fully_fillable() {
         &50_000i128,
         &600i128,
         &TimeInForce::Gtc,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order_id = client.create_limit_order(
@@ -1004,6 +1027,7 @@ fn test_fok_order_executes_when_fully_fillable() {
         &50_000i128,
         &1_000i128,
         &TimeInForce::Fok,
+        &1_000_000_000i128, // pool_liquidity
     );
 
     let buy_order = client.get_order(&buy_order_id).unwrap();

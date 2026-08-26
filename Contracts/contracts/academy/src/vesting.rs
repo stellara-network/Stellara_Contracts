@@ -1,4 +1,5 @@
 use shared::circuit_breaker::{CircuitBreaker, CircuitBreakerConfig};
+use shared::events::{AccessDeniedEvent, AuditActionEvent, EventEmitter};
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Vec};
 
 const MAX_BATCH_CLAIMS: u32 = 25;
@@ -226,6 +227,16 @@ impl AcademyVestingContract {
             .ok_or(VestingError::Unauthorized)?;
 
         if admin != stored_admin {
+            // Audit: record the denied attempt before failing
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin,
+                    required_permission: symbol_short!("admin"),
+                    resource: symbol_short!("grant"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
             return Err(VestingError::Unauthorized);
         }
 
@@ -294,11 +305,24 @@ impl AcademyVestingContract {
             cliff,
             duration,
             granted_at: current_timestamp,
-            granted_by: admin,
+            granted_by: admin.clone(),
         };
 
         env.events()
             .publish((symbol_short!("cred_iss"),), credential_event);
+
+        // Audit: standardized admin-mutation event alongside the domain events above
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("grant"),
+                old_value: symbol_short!("none"),
+                new_value: symbol_short!("active"),
+                correlation_id: symbol_short!("grant"),
+                timestamp: current_timestamp,
+            },
+        );
 
         Ok(next_id)
     }
@@ -457,6 +481,16 @@ impl AcademyVestingContract {
             .ok_or(VestingError::Unauthorized)?;
 
         if admin != stored_admin {
+            // Audit: record the denied attempt before failing
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin,
+                    required_permission: symbol_short!("admin"),
+                    resource: symbol_short!("revoke"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
             return Err(VestingError::Unauthorized);
         }
 
@@ -497,11 +531,24 @@ impl AcademyVestingContract {
             grant_id,
             beneficiary: schedule.beneficiary,
             revoked_at: current_time,
-            revoked_by: admin,
+            revoked_by: admin.clone(),
         };
 
         env.events()
             .publish((symbol_short!("revoke"),), revoke_event);
+
+        // Audit: standardized admin-mutation event alongside the domain event above
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("revoke"),
+                old_value: symbol_short!("active"),
+                new_value: symbol_short!("revoked"),
+                correlation_id: symbol_short!("revoke"),
+                timestamp: current_time,
+            },
+        );
 
         Ok(())
     }

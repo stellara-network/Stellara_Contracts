@@ -9,8 +9,14 @@ import { AuditLog, AuditLogArchive } from './audit.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog, AuditLogArchive])],
-  providers: [AuditService],
+  providers: [
+    {
+      provide: 'AuditService',
+      useExisting: AuditService,
+    },
+    AuditService,
+  ],
   controllers: [AuditController, AuditVerificationController],
-  exports: [AuditService],
+  exports: [AuditService, 'AuditService'],
 })
 export class AuditModule {}

@@ -4,6 +4,7 @@ use shared::acl::{ACL, ROLE_ADMIN, PERMISSION_PAUSE, PERMISSION_UNPAUSE, PERMISS
 use shared::circuit_breaker::{
     CircuitBreaker, CircuitBreakerConfig, CircuitBreakerState, PauseLevel,
 };
+use shared::events::{AccessDeniedEvent, AuditActionEvent, EventEmitter};
 use shared::governance::{GovernanceManager, UpgradeProposal};
 use shared::nonce::NonceManager;
 use shared::reentrancy_guard::ReentrancyGuard;
@@ -563,8 +564,34 @@ impl UpgradeableMessagingContract {
         level: PauseLevel,
     ) -> Result<(), MessagingError> {
         admin.require_auth();
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_PAUSE) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_PAUSE,
+                    resource: symbol_short!("cb_level"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_PAUSE);
-        CircuitBreaker::set_pause_level(&env, admin, level);
+
+        CircuitBreaker::set_pause_level(&env, admin.clone(), level);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("cb_level"),
+                old_value: symbol_short!("unknown"),
+                new_value: symbol_short!("set"),
+                correlation_id: symbol_short!("cb_level"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -574,8 +601,34 @@ impl UpgradeableMessagingContract {
         func_name: Symbol,
     ) -> Result<(), MessagingError> {
         admin.require_auth();
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_PAUSE) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_PAUSE,
+                    resource: symbol_short!("pause_fn"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_PAUSE);
-        CircuitBreaker::pause_function(&env, admin, func_name);
+
+        CircuitBreaker::pause_function(&env, admin.clone(), func_name);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("pause_fn"),
+                old_value: symbol_short!("active"),
+                new_value: symbol_short!("paused"),
+                correlation_id: symbol_short!("pause_fn"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -585,8 +638,34 @@ impl UpgradeableMessagingContract {
         func_name: Symbol,
     ) -> Result<(), MessagingError> {
         admin.require_auth();
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_UNPAUSE) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_UNPAUSE,
+                    resource: symbol_short!("unpause"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_UNPAUSE);
-        CircuitBreaker::unpause_function(&env, admin, func_name);
+
+        CircuitBreaker::unpause_function(&env, admin.clone(), func_name);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("unpause"),
+                old_value: symbol_short!("paused"),
+                new_value: symbol_short!("active"),
+                correlation_id: symbol_short!("unpause"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -629,6 +708,18 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_SET_RATE) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_SET_RATE,
+                    resource: symbol_short!("rate_cfg"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_SET_RATE);
 
         if window_secs == 0 || user_limit == 0 || global_limit == 0 || premium_user_limit == 0 {
@@ -643,6 +734,19 @@ impl UpgradeableMessagingContract {
         };
 
         env.storage().persistent().set(&RL_CFG, &cfg);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("rate_cfg"),
+                old_value: symbol_short!("prior"),
+                new_value: symbol_short!("updated"),
+                correlation_id: symbol_short!("rate_cfg"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -654,6 +758,18 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_PREMIUM) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_PREMIUM,
+                    resource: symbol_short!("premium"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_PREMIUM);
 
         let mut premium_users: Map<Address, bool> = env
@@ -662,8 +778,29 @@ impl UpgradeableMessagingContract {
             .get(&PREM)
             .unwrap_or_else(|| Map::new(&env));
 
+        let was_premium = premium_users.get(user.clone()).unwrap_or(false);
         premium_users.set(user, is_premium);
         env.storage().persistent().set(&PREM, &premium_users);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("premium"),
+                old_value: if was_premium {
+                    symbol_short!("true")
+                } else {
+                    symbol_short!("false")
+                },
+                new_value: if is_premium {
+                    symbol_short!("true")
+                } else {
+                    symbol_short!("false")
+                },
+                correlation_id: symbol_short!("premium"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
 
         Ok(())
     }
@@ -676,8 +813,34 @@ impl UpgradeableMessagingContract {
     pub fn create_role(env: Env, admin: Address, role: Symbol) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_MGR_ACL) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_MGR_ACL,
+                    resource: symbol_short!("cr_role"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_MGR_ACL);
+
         ACL::create_role(&env, &role);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("cr_role"),
+                old_value: symbol_short!("none"),
+                new_value: role,
+                correlation_id: symbol_short!("cr_role"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -689,8 +852,34 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_MGR_ACL) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_MGR_ACL,
+                    resource: symbol_short!("asn_role"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_MGR_ACL);
+
         ACL::assign_role(&env, &user, &role);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("asn_role"),
+                old_value: symbol_short!("none"),
+                new_value: role,
+                correlation_id: symbol_short!("asn_role"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -702,8 +891,34 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_MGR_ACL) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_MGR_ACL,
+                    resource: symbol_short!("asn_perm"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_MGR_ACL);
+
         ACL::assign_permission(&env, &role, &permission);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("asn_perm"),
+                old_value: role,
+                new_value: permission,
+                correlation_id: symbol_short!("asn_perm"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -715,8 +930,34 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_MGR_ACL) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_MGR_ACL,
+                    resource: symbol_short!("asn_permb"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_MGR_ACL);
+
         ACL::assign_permissions_batch(&env, &role, &permissions);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("asn_permb"),
+                old_value: role,
+                new_value: symbol_short!("batch"),
+                correlation_id: symbol_short!("asn_permb"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -728,8 +969,34 @@ impl UpgradeableMessagingContract {
     ) -> Result<(), MessagingError> {
         admin.require_auth();
         require_initialized(&env)?;
+
+        if !ACL::has_permission(&env, &admin, &PERMISSION_MGR_ACL) {
+            EventEmitter::access_denied(
+                &env,
+                AccessDeniedEvent {
+                    actor: admin.clone(),
+                    required_permission: PERMISSION_MGR_ACL,
+                    resource: symbol_short!("role_par"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
         ACL::require_permission(&env, &admin, &PERMISSION_MGR_ACL);
+
         ACL::set_parent_role(&env, &child, &parent);
+
+        EventEmitter::audit_action(
+            &env,
+            AuditActionEvent {
+                actor: admin,
+                operation: symbol_short!("role_par"),
+                old_value: child,
+                new_value: parent,
+                correlation_id: symbol_short!("role_par"),
+                timestamp: env.ledger().timestamp(),
+            },
+        );
+
         Ok(())
     }
 
@@ -775,9 +1042,9 @@ impl UpgradeableMessagingContract {
         admin.require_auth();
         require_initialized(&env)?;
 
-        GovernanceManager::propose_upgrade(
+        let result = GovernanceManager::propose_upgrade(
             &env,
-            admin,
+            admin.clone(),
             new_contract_hash,
             env.current_contract_address(),
             description,
@@ -785,7 +1052,23 @@ impl UpgradeableMessagingContract {
             approvers,
             timelock_delay,
         )
-        .map_err(|_| MessagingError::Unauthorized)
+        .map_err(|_| MessagingError::Unauthorized);
+
+        if result.is_ok() {
+            EventEmitter::audit_action(
+                &env,
+                AuditActionEvent {
+                    actor: admin,
+                    operation: symbol_short!("propose"),
+                    old_value: symbol_short!("none"),
+                    new_value: symbol_short!("pending"),
+                    correlation_id: symbol_short!("propose"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
+
+        result
     }
 
     pub fn approve_upgrade(
@@ -796,8 +1079,24 @@ impl UpgradeableMessagingContract {
         approver.require_auth();
         require_initialized(&env)?;
 
-        GovernanceManager::approve_proposal(&env, proposal_id, approver)
-            .map_err(|_| MessagingError::Unauthorized)
+        let result = GovernanceManager::approve_proposal(&env, proposal_id, approver.clone())
+            .map_err(|_| MessagingError::Unauthorized);
+
+        if result.is_ok() {
+            EventEmitter::audit_action(
+                &env,
+                AuditActionEvent {
+                    actor: approver,
+                    operation: symbol_short!("approve"),
+                    old_value: symbol_short!("pending"),
+                    new_value: symbol_short!("approved"),
+                    correlation_id: symbol_short!("approve"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
+
+        result
     }
 
     pub fn execute_upgrade(
@@ -808,8 +1107,24 @@ impl UpgradeableMessagingContract {
         executor.require_auth();
         require_initialized(&env)?;
 
-        GovernanceManager::execute_proposal(&env, proposal_id, executor)
-            .map_err(|_| MessagingError::Unauthorized)
+        let result = GovernanceManager::execute_proposal(&env, proposal_id, executor.clone())
+            .map_err(|_| MessagingError::Unauthorized);
+
+        if result.is_ok() {
+            EventEmitter::audit_action(
+                &env,
+                AuditActionEvent {
+                    actor: executor,
+                    operation: symbol_short!("execute"),
+                    old_value: symbol_short!("approved"),
+                    new_value: symbol_short!("executed"),
+                    correlation_id: symbol_short!("execute"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
+
+        result
     }
 
     pub fn get_upgrade_proposal(
@@ -828,8 +1143,24 @@ impl UpgradeableMessagingContract {
         rejector.require_auth();
         require_initialized(&env)?;
 
-        GovernanceManager::reject_proposal(&env, proposal_id, rejector)
-            .map_err(|_| MessagingError::Unauthorized)
+        let result = GovernanceManager::reject_proposal(&env, proposal_id, rejector.clone())
+            .map_err(|_| MessagingError::Unauthorized);
+
+        if result.is_ok() {
+            EventEmitter::audit_action(
+                &env,
+                AuditActionEvent {
+                    actor: rejector,
+                    operation: symbol_short!("reject"),
+                    old_value: symbol_short!("pending"),
+                    new_value: symbol_short!("rejected"),
+                    correlation_id: symbol_short!("reject"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
+
+        result
     }
 
     pub fn cancel_upgrade(
@@ -840,8 +1171,24 @@ impl UpgradeableMessagingContract {
         admin.require_auth();
         require_initialized(&env)?;
 
-        GovernanceManager::cancel_proposal(&env, proposal_id, admin)
-            .map_err(|_| MessagingError::Unauthorized)
+        let result = GovernanceManager::cancel_proposal(&env, proposal_id, admin.clone())
+            .map_err(|_| MessagingError::Unauthorized);
+
+        if result.is_ok() {
+            EventEmitter::audit_action(
+                &env,
+                AuditActionEvent {
+                    actor: admin,
+                    operation: symbol_short!("cancel"),
+                    old_value: symbol_short!("pending"),
+                    new_value: symbol_short!("canceled"),
+                    correlation_id: symbol_short!("cancel"),
+                    timestamp: env.ledger().timestamp(),
+                },
+            );
+        }
+
+        result
     }
 
     pub fn register_encryption_key(

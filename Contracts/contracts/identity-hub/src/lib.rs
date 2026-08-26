@@ -34,6 +34,8 @@ pub struct IdentityHub {
     pub owner_did: Symbol,
     pub data_entries: Vec<DataEntry>,
     pub permissions: Vec<Permission>,
+    pub kyc_level: KycLevel,
+    pub kyc_verified_at: Option<u64>,
     pub created_at: u64,
     pub updated_at: u64,
 }
@@ -72,6 +74,17 @@ pub enum PermissionType {
     Write  = 1,
     Share  = 2,
     Verify = 3,
+}
+
+/// KYC verification levels
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum KycLevel {
+    None = 0,
+    Basic = 1,
+    Enhanced = 2,
+    Institutional = 3,
 }
 
 /// Condition value stored as a u64 (timestamp limit or numeric threshold).
@@ -168,6 +181,8 @@ impl IdentityHubContract {
             owner_did: owner_did.clone(),
             data_entries: Vec::new(&env),
             permissions: Vec::new(&env),
+            kyc_level: KycLevel::None,
+            kyc_verified_at: None,
             created_at: env.ledger().timestamp(),
             updated_at: env.ledger().timestamp(),
         });
@@ -362,6 +377,32 @@ impl IdentityHubContract {
 
     pub fn get_hub_count(env: Env) -> u64 {
         env.storage().persistent().get(&keys::HUB_CNT).unwrap_or(0)
+    }
+
+    /// Update KYC level for a hub (admin only)
+    pub fn update_kyc_level(env: Env, caller: Address, hub_id: Symbol, kyc_level: KycLevel) -> Result<(), IdentityHubError> {
+        caller.require_auth();
+        let mut hub = Self::load_hub(&env, &hub_id).unwrap_or_else(|| panic!("Hub not found"));
+
+        hub.kyc_level = kyc_level;
+        hub.kyc_verified_at = Some(env.ledger().timestamp());
+        hub.updated_at = env.ledger().timestamp();
+        Self::save_hub(&env, &hub_id, hub);
+
+        Ok(())
+    }
+
+    /// Get KYC level for a hub
+    pub fn get_kyc_level(env: Env, hub_id: Symbol) -> KycLevel {
+        let hub = Self::load_hub(&env, &hub_id).unwrap_or_else(|| panic!("Hub not found"));
+        hub.kyc_level
+    }
+
+    /// Get account age in days
+    pub fn get_account_age_days(env: Env, hub_id: Symbol) -> u64 {
+        let hub = Self::load_hub(&env, &hub_id).unwrap_or_else(|| panic!("Hub not found"));
+        let now = env.ledger().timestamp();
+        (now - hub.created_at) / 86400
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────
