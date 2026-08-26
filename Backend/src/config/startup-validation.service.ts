@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { SecretsMaskingService } from './secrets-masking.service';
 import { createClient, RedisClientType } from 'redis';
+import { buildRedisUrl } from '../redis/redis.config';
 
 /**
  * Result of a single dependency check.
@@ -45,8 +46,7 @@ export class StartupValidationService {
    * Returns a report with per-dependency status and an overall pass/fail.
    *
    * @param options.timeoutMs  Per-check timeout in milliseconds.
-   * @param options.failOnError If true, throws on any critical failure (database).
-   *                            Redis failures produce a warning but don't block startup.
+  * @param options.failOnError If true, throws when any dependency check fails.
    */
   async validate(options?: {
     timeoutMs?: number;
@@ -104,25 +104,17 @@ export class StartupValidationService {
     // Log summary
     this.logStartupReport(report);
 
-    // Fail-fast for critical dependencies
-    const criticalFailures = checks.filter(
-      (c) => c.status === 'error' && c.name === 'database',
-    );
-
-    if (failOnError && criticalFailures.length > 0) {
-      const messages = criticalFailures.map((c) => `${c.name}: ${c.message}`).join('; ');
+    const failures = checks.filter((c) => c.status === 'error');
+    if (failOnError && failures.length > 0) {
+      const messages = failures.map((c) => `${c.name}: ${c.message}`).join('; ');
       throw new Error(
-        `Startup validation failed — critical dependency unavailable: ${messages}`,
+        `Startup validation failed — dependency unavailable: ${messages}`,
       );
     }
 
-    // Redis failures are warnings, not fatal (app can run in degraded mode)
-    const redisFailures = checks.filter(
-      (c) => c.status === 'error' && c.name === 'redis',
-    );
-    if (redisFailures.length > 0) {
+    if (failures.length > 0) {
       this.logger.warn(
-        'Redis unavailable — application will run in degraded mode (no real-time events, no queue processing)',
+        `Startup dependency validation found ${failures.length} failure(s); application is not ready`,
       );
     }
 
@@ -174,9 +166,12 @@ export class StartupValidationService {
    */
   private async checkRedis(timeoutMs: number): Promise<DependencyCheckResult> {
     const start = Date.now();
-    const url =
-      this.configService.get('REDIS_URL') ||
-      `redis://${this.configService.get('REDIS_HOST') || 'localhost'}:${this.configService.get('REDIS_PORT') || 6379}`;
+    const url = buildRedisUrl({
+      REDIS_URL: this.configService.get('REDIS_URL'),
+      REDIS_HOST: this.configService.get('REDIS_HOST'),
+      REDIS_PORT: this.configService.get('REDIS_PORT'),
+      REDIS_PASSWORD: this.configService.get('REDIS_PASSWORD'),
+    });
 
     let client: RedisClientType | undefined;
     try {

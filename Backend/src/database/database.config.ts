@@ -6,6 +6,9 @@ export type DatabaseConnectionOptions = {
   username: string;
   password?: string;
   database: string;
+  entities?: TypeOrmModuleOptions['entities'];
+  migrations?: TypeOrmModuleOptions['migrations'];
+  logging?: TypeOrmModuleOptions['logging'];
 };
 
 export const buildTypeOrmOptions = (
@@ -18,9 +21,9 @@ export const buildTypeOrmOptions = (
   password: config.password,
   database: config.database,
   synchronize: false,
-  logging: false,
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['dist/database/migrations/*{.ts,.js}'],
+  entities: config.entities ?? ['dist/**/*.entity{.ts,.js}'],
+  migrations: config.migrations ?? ['dist/database/migrations/*{.ts,.js}'],
+  logging: config.logging ?? false,
   extra: {
     max: 20,
     min: 5,

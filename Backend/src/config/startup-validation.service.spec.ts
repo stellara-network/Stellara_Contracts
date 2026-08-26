@@ -213,17 +213,14 @@ describe('StartupValidationService', () => {
         expect(redisCheck!.message).toContain('timed out');
       });
 
-      it('should not fail startup when Redis is down (only warning)', async () => {
+      it('should fail startup when Redis is down', async () => {
         mockRedisClient.connect.mockRejectedValue(
           new Error('Connection refused'),
         );
 
-        const report = await service.validate({ failOnError: true });
-
-        // Redis failure should NOT cause overall failure
-        expect(report.success).toBe(false); // because DB also fails if mocked to fail
-        // But specifically, Redis shouldn't cause the throw
-        // Let's test with DB healthy:
+        await expect(service.validate({ failOnError: true })).rejects.toThrow(
+          'redis: Connection refused',
+        );
       });
 
       it('should pass overall when only Redis is down and DB is healthy', async () => {
@@ -231,11 +228,9 @@ describe('StartupValidationService', () => {
           new Error('Connection refused'),
         );
 
-        const report = await service.validate({ failOnError: true });
-
-        // DB should still be ok
-        const dbCheck = report.checks.find((c) => c.name === 'database');
-        expect(dbCheck!.status).toBe('ok');
+        await expect(service.validate({ failOnError: true })).rejects.toThrow(
+          'redis: Connection refused',
+        );
       });
     });
 

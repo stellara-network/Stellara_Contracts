@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { createClient, RedisClientType } from 'redis';
 import { SecretsMaskingService } from '../config/secrets-masking.service';
 import { SecretsRotationService } from '../config/secrets-rotation.service';
+import { buildRedisUrl } from './redis.config';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -42,7 +43,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * in application logs.
    */
   private async connect(): Promise<void> {
-    const url = process.env.REDIS_URL || 'redis://localhost:6379';
+    const url = buildRedisUrl();
     const safeUrl = this.maskingService.mask(url);
 
     this.logger.log(`Connecting to Redis: ${safeUrl}`);

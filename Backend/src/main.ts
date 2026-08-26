@@ -12,8 +12,6 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { CorrelationMiddleware } from './observability/middleware/correlation.middleware';
 
-const REQUIRED_ENV_VARS = ['JWT_SECRET', 'DB_HOST', 'REDIS_URL'] as const;
-
 /**
  * Lightweight inline masker used before the DI container is ready
  * (i.e., in the top-level bootstrap().catch handler).
@@ -37,37 +35,15 @@ function maskBootstrapError(message: string): string {
   return safe;
 }
 
-function validateRequiredEnv(): void {
-  const missing: string[] = [];
-  for (const key of REQUIRED_ENV_VARS) {
-    if (!process.env[key]) {
-      missing.push(key);
-    }
-  }
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}.\n` +
-        'Set them in your .env file or export them before starting the server.\n' +
-        'Required: JWT_SECRET, DB_HOST, REDIS_URL (or REDIS_HOST + REDIS_PORT)',
-    );
-  }
-}
-
 let app: INestApplication;
 
 async function bootstrap() {
   const bootstrapStart = Date.now();
   const logger = new Logger('Bootstrap');
 
-  // ── Phase 1: Pre-DI environment validation ────────────────────────────────
-  // This runs before NestJS creates the DI container, so we can only check
-  // process.env directly. Fail immediately if critical vars are missing.
-  logger.log('Phase 1/4: Validating required environment variables…');
-  validateRequiredEnv();
-  logger.log('Phase 1/4: ✅ Required env vars present');
-
-  // ── Phase 2: Create DI container & core services ──────────────────────────
-  logger.log('Phase 2/4: Creating application container…');
+  // ConfigModule.forRoot validates the environment before the remaining
+  // modules and providers are initialized.
+  logger.log('Phase 1/3: Creating application container and validating configuration…');
   const containerStart = Date.now();
 
   app = await NestFactory.create(AppModule, {
@@ -78,11 +54,11 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  logger.log(`Phase 2/4: ✅ Container ready (${Date.now() - containerStart}ms)`);
+  logger.log(`Phase 1/3: ✅ Container ready (${Date.now() - containerStart}ms)`);
 
   // ── Phase 3: Configuration validation ────────────────────────────────────
   // Validates all env vars against the ConfigDto schema (type, range, format).
-  logger.log('Phase 3/4: Running configuration schema validation…');
+  logger.log('Phase 2/3: Running configuration schema validation…');
   const configStart = Date.now();
 
   const maskingService = app.get(SecretsMaskingService);
@@ -97,12 +73,12 @@ async function bootstrap() {
     const configValidationService = app.get(ConfigValidationService);
     const configResult = configValidationService.validate();
     logger.log(
-      `Phase 3/4: ✅ Configuration valid (${configResult.warnings.length} warning(s), ${Date.now() - configStart}ms)`,
+      `Phase 2/3: ✅ Configuration valid (${configResult.warnings.length} warning(s), ${Date.now() - configStart}ms)`,
     );
   } catch (err) {
     const safeMessage = maskingService.mask((err as Error).message);
     Logger.error(
-      `Phase 3/4: ❌ Configuration validation failed: ${safeMessage}`,
+      `Phase 2/3: ❌ Configuration validation failed: ${safeMessage}`,
       'Bootstrap',
     );
     process.exit(1);
@@ -110,19 +86,19 @@ async function bootstrap() {
 
   // ── Phase 4: Dependency connectivity checks ──────────────────────────────
   // Validates DB, Redis, and Queue configuration at startup with timeouts.
-  logger.log('Phase 4/4: Validating dependency connectivity…');
+  logger.log('Phase 3/3: Validating dependency connectivity…');
   const depStart = Date.now();
 
   try {
     const startupValidationService = app.get(StartupValidationService);
     const report = await startupValidationService.validate({
       timeoutMs: parseInt(process.env.STARTUP_CHECK_TIMEOUT_MS || '5000', 10),
-      failOnError: process.env.STARTUP_FAIL_ON_DB_ERROR !== 'false',
+      failOnError: true,
     });
 
     if (report.success) {
       logger.log(
-        `Phase 4/4: ✅ All dependencies healthy (${Date.now() - depStart}ms)`,
+        `Phase 3/3: ✅ All dependencies healthy (${Date.now() - depStart}ms)`,
       );
     } else {
       const failedDeps = report.checks
@@ -130,13 +106,13 @@ async function bootstrap() {
         .map((c) => c.name)
         .join(', ');
       logger.warn(
-        `Phase 4/4: ⚠️  Some dependencies unhealthy (${failedDeps}) — degraded mode`,
+        `Phase 3/3: ⚠️  Some dependencies unhealthy (${failedDeps})`,
       );
     }
   } catch (err) {
     const safeMessage = maskingService.mask((err as Error).message);
     Logger.error(
-      `Phase 4/4: ❌ Startup dependency validation failed: ${safeMessage}`,
+      `Phase 3/3: ❌ Startup dependency validation failed: ${safeMessage}`,
       'Bootstrap',
     );
     process.exit(1);

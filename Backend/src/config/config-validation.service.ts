@@ -191,6 +191,8 @@ export class ConfigValidationService {
       'SWAGGER_ENABLED', 'DEBUG',
       // CORS
       'CORS_ORIGINS',
+      // Startup validation
+      'STARTUP_CHECK_TIMEOUT_MS', 'STARTUP_FAIL_ON_DB_ERROR',
     ];
 
     const envVars: Record<string, string | undefined> = {};

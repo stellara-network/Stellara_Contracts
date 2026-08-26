@@ -38,25 +38,26 @@ import { HealthModule } from './health/health.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { TracingInterceptor } from './observability/interceptors/tracing.interceptor';
 import { CorrelationMiddleware } from './observability/middleware/correlation.middleware';
+import { validateEnvironment } from './config/environment-validation';
 
 @Module({
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnvironment,
     }),
 
     ScheduleModule.forRoot(),
 
-TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [NestConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST') || 'localhost',
-        port: configService.get('DB_PORT') || 5432,
-        username: configService.get('DB_USERNAME') || 'postgres',
+      useFactory: (configService: ConfigService) => buildTypeOrmOptions({
+        host: configService.get('DB_HOST', 'localhost'),
+        port: configService.get('DB_PORT', 5432),
+        username: configService.get('DB_USERNAME', 'postgres'),
         password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE') || 'stellara_workflows',
+        database: configService.get('DB_DATABASE', 'stellara_workflows'),
         entities: [
           Workflow,
           WorkflowStep,
@@ -67,17 +68,9 @@ TypeOrmModule.forRootAsync({
           ApiToken,
           AuditLog,
           AuditLogArchive,
-VoiceJob,
+          VoiceJob,
         ],
-        synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
-        extra: {
-          max: 20,
-          min: 5,
-          idleTimeoutMillis: 30000,
-        },
-        retryAttempts: 5,
-        retryDelay: 3000,
         migrations: ['src/database/migrations/*{.ts,.js}'],
       }),
     }),
