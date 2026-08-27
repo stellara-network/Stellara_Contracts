@@ -556,6 +556,60 @@ pub fn migrate_from_v1(env: Env) {
 }
 ```
 
+### 7.3 Solidity Storage-Gap Discipline (MultisigTreasury)
+
+`Contracts/contracts/MultisigTreasury.sol` is the EVM-side counterpart of the
+Soroban governance stack and is deployed behind a proxy, so it cannot rely on
+Soroban's per-key storage model. It reserves a trailing gap instead:
+
+```solidity
+uint256[46] private __gap;
+```
+
+The rule when adding state is: **append new variables immediately before
+`__gap`, then reduce the gap by the number of slots actually consumed**, so the
+combined footprint of the declared variables plus the gap never changes and no
+following slot shifts across versions.
+
+The batch/pause release illustrates both cases:
+
+| Variable     | Slots consumed | Why                                                   |
+| :----------- | :------------- | :---------------------------------------------------- |
+| `paused`     | 0              | A `bool` packed into the existing `frozen` slot       |
+| `batchNonce` | 1              | A `uint256` appended before the gap                   |
+
+Hence `__gap` went from 47 to 46 slots, not 45. Packing a `bool` next to an
+existing `bool` is layout-neutral — the byte it occupies was already allocated
+and zero in the previous version — but it must still be reasoned about
+explicitly, because the moment a packed variable no longer fits the current slot
+it silently claims a new one and shifts everything after it.
+
+**Verification before any upgrade:**
+
+- [ ] Declared-variable slots + `__gap` size is unchanged from the prior version
+- [ ] New variables are appended, never inserted between existing ones
+- [ ] Existing variable types and order are untouched
+- [ ] `npx hardhat test test/MultisigTreasury.test.js` passes, including the
+      storage-layout test that asserts every public governance field
+
+### 7.4 Governance Pause vs. Upgrade Freeze
+
+Two independent halt mechanisms exist and should not be conflated during an
+incident:
+
+| Mechanism                         | Scope                                      | Approval               |
+| :-------------------------------- | :----------------------------------------- | :--------------------- |
+| Admin pause (§2.1, Soroban)       | Stops contract entry points and upgrades   | Admin role             |
+| Treasury pause (`pause`)          | Stops new treasury operations; keeps the emergency-withdrawal hatch open | `required` M-of-N |
+| Treasury freeze (`emergencyFreeze`) | Stops everything except `unfreezeInternal` | Unanimous            |
+
+A treasury pause is the correct first response to a suspected treasury issue: it
+is fast (base threshold, no timelock) and still lets owners move funds out under
+unanimous approval. Escalate to a freeze only when funds should not move at all,
+and pause the Soroban side separately if the incident involves an upgrade
+proposal. See [README_TREASURY.md](./README_TREASURY.md) for the full pause and
+emergency-withdrawal runbook.
+
 ## 9. Transparency & User Communication
 
 ### 8.1 Proposal Visibility
@@ -606,7 +660,11 @@ Before deploying to mainnet:
 - [ ] `cargo test -p integration-tests --test initializer_protection` passes
 - [ ] `cargo test -p integration-tests --test upgrade_paths` passes
 - [ ] `cargo test -p did-registry` passes
-- [ ] Double-init rejection verified on deployed contracts (deploy script step 7)
+- [ ] `npx hardhat test test/MultisigTreasury.test.js` passes (batch atomicity,
+      pause gates, emergency withdrawals, storage layout)
+- [ ] Treasury storage-gap invariant re-checked against the prior version (§7.3)
+- [ ] Treasury pause/unpause and emergency withdrawal rehearsed on testnet
+- [ ] Double-init rejection verified on deployed contracts (deploy script step 8)
 - [ ] Documentation shared with community
 - [ ] Emergency escalation path documented
 - [ ] Monitoring alerts configured
@@ -625,6 +683,6 @@ Before deploying to mainnet:
 
 ---
 
-**Last Updated**: January 22, 2026  
-**Version**: 1.0  
+**Last Updated**: August 27, 2026  
+**Version**: 1.1  
 **Status**: Active

@@ -8,16 +8,25 @@
 # This script:
 #   1. Builds all contract WASM binaries
 #   2. Runs upgradeability unit tests and upgrade-path integration tests
-#   3. Deploys contracts to the target network
-#   4. Calls initialize() once on each contract
-#   5. Verifies that a second initialize() call is rejected
+#   3. Runs the EVM treasury governance suite (batch atomicity, pause gates,
+#      emergency withdrawals) — a governance regression there is as
+#      deployment-blocking as a failing initializer guard
+#   4. Deploys contracts to the target network
+#   5. Calls initialize() once on each contract
+#   6. Verifies that a second initialize() call is rejected
 #
 # Usage:
 #   ./scripts/deploy/deploy_upgradeable.sh [--network testnet|mainnet]
 #
+# Environment:
+#   SKIP_TREASURY_TESTS=1  Skip step 5 (the Hardhat treasury suite). Intended
+#                          only for environments without a Node toolchain; the
+#                          suite is otherwise required before deploying.
+#
 # Prerequisites:
 #   - Stellar CLI installed (stellar --version)
 #   - Rust toolchain with wasm32-unknown-unknown target
+#   - Node.js toolchain for the Hardhat treasury suite (npm install)
 #   - Funded account configured as 'deployer'
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -56,7 +65,27 @@ info "Running initializer protection integration tests..."
 cargo test -p integration-tests --test initializer_protection -- --test-threads=1
 success "Initializer protection integration tests passed"
 
-# ── Step 5: Deploy Soroban contracts ─────────────────────────────────
+# ── Step 5: Run EVM treasury governance tests ────────────────────────
+# The MultisigTreasury suite covers batch atomicity (a failing member must roll
+# the whole batch back), the pause gates, and the emergency-withdrawal escape
+# hatch. These are governance invariants, so a failure blocks deployment.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+if [ "${SKIP_TREASURY_TESTS:-0}" = "1" ]; then
+    warn "SKIP_TREASURY_TESTS=1 — skipping the Hardhat treasury suite"
+elif ! command -v npx >/dev/null 2>&1; then
+    error "npx not found; install the Node toolchain or set SKIP_TREASURY_TESTS=1"
+    exit 1
+elif [ ! -d "${REPO_ROOT}/node_modules" ]; then
+    error "node_modules missing in ${REPO_ROOT}; run 'npm install' or set SKIP_TREASURY_TESTS=1"
+    exit 1
+else
+    info "Running MultisigTreasury governance tests (batch + pause)..."
+    (cd "$REPO_ROOT" && npx hardhat test test/MultisigTreasury.test.js)
+    success "Treasury batch execution and pause tests passed"
+fi
+
+# ── Step 6: Deploy Soroban contracts ─────────────────────────────────
 info "Deploying Soroban contracts to ${NETWORK_NAME}..."
 
 # Format: "name:wasm_path:init_args"
@@ -96,7 +125,7 @@ for entry in "${CONTRACTS[@]}"; do
     success "Deployed ${name}: ${CONTRACT_ID}"
 done
 
-# ── Step 6: Initialize contracts ─────────────────────────────────────
+# ── Step 7: Initialize contracts ─────────────────────────────────────
 info "Initializing deployed contracts..."
 
 for name in "${!CONTRACT_IDS[@]}"; do
@@ -119,7 +148,7 @@ for name in "${!CONTRACT_IDS[@]}"; do
     success "Initialized ${name}"
 done
 
-# ── Step 7: Verify initializer protection ────────────────────────────
+# ── Step 8: Verify initializer protection ────────────────────────────
 info "Verifying initializer protection (double-init must fail)..."
 
 VERIFICATION_PASSED=true
