@@ -351,7 +351,609 @@ describe("MultisigTreasury", function () {
     expect(await treasury.MIN_TIMELOCK_DELAY()).to.equal(1n * 86400n);
     expect(await treasury.MAX_TIMELOCK_DELAY()).to.equal(7n * 86400n);
     expect(await treasury.frozen()).to.equal(false);
+    expect(await treasury.paused()).to.equal(false);
+    expect(await treasury.batchNonce()).to.equal(0n);
+    expect(await treasury.MAX_BATCH_SIZE()).to.equal(20n);
     const owners = await treasury.getOwners();
     expect(owners.length).to.equal(3);
+  });
+
+  function parseLogs(receipt) {
+    return receipt.logs
+      .map((log) => {
+        try {
+          return treasury.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }
+
+  async function submitBatchTx(from, tos, values, datas) {
+    const start = await treasury.getTransactionCount();
+    const receipt = await (await treasury.connect(from).submitBatch(tos, values, datas)).wait();
+    return { receipt, indexes: tos.map((_, i) => start + BigInt(i)) };
+  }
+
+  describe("batch execution", function () {
+    it("submits an array of transactions as one correlated batch", async () => {
+      const values = [ethers.parseEther("0.1"), ethers.parseEther("0.2")];
+      const { receipt, indexes } = await submitBatchTx(
+        owner0,
+        [recipient.address, recipient.address],
+        values,
+        ["0x", "0x"]
+      );
+
+      const events = parseLogs(receipt);
+      const submitted = events.find((e) => e.name === "BatchSubmitted");
+      const members = events.filter((e) => e.name === "BatchTransactionSubmitted");
+
+      expect(submitted.args.owner).to.equal(owner0.address);
+      expect(submitted.args.count).to.equal(2n);
+      expect(members.length).to.equal(2);
+      members.forEach((event, i) => {
+        // Every member repeats the batch correlation id and its position.
+        expect(event.args.batchId).to.equal(submitted.args.batchId);
+        expect(event.args.txIndex).to.equal(indexes[i]);
+        expect(event.args.position).to.equal(BigInt(i));
+        expect(event.args.to).to.equal(recipient.address);
+        expect(event.args.value).to.equal(values[i]);
+      });
+
+      expect(await treasury.getTransactionCount()).to.equal(2n);
+      expect(await treasury.batchNonce()).to.equal(1n);
+    });
+
+    it("rejects malformed batch submissions", async () => {
+      await expect(treasury.connect(owner0).submitBatch([], [], [])).to.be.revertedWith("empty batch");
+      await expect(
+        treasury.connect(owner0).submitBatch([recipient.address], [], [])
+      ).to.be.revertedWith("batch length mismatch");
+      await expect(
+        treasury.connect(owner0).submitBatch([recipient.address], [1n], [])
+      ).to.be.revertedWith("batch length mismatch");
+
+      const oversize = 21;
+      await expect(
+        treasury
+          .connect(owner0)
+          .submitBatch(
+            Array(oversize).fill(recipient.address),
+            Array(oversize).fill(0n),
+            Array(oversize).fill("0x")
+          )
+      ).to.be.revertedWith("batch too large");
+
+      // Non-owners cannot open a batch.
+      await expect(
+        treasury.connect(recipient).submitBatch([recipient.address], [0n], ["0x"])
+      ).to.be.revertedWith("not owner");
+    });
+
+    it("executes a batch atomically and correlates every transaction event", async () => {
+      const value = ethers.parseEther("0.5");
+      const idxA = await submitTx(owner0, recipient.address, value);
+      const idxB = await submitTx(owner1, recipient.address, value);
+      await confirmBy(idxA, owner0);
+      await confirmBy(idxB, owner1);
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      const receipt = await (await treasury.connect(owner0).executeBatch([idxA, idxB])).wait();
+      const after = await ethers.provider.getBalance(recipient.address);
+      expect(after - before).to.equal(value * 2n);
+
+      const events = parseLogs(receipt);
+      const executed = events.find((e) => e.name === "BatchExecuted");
+      const members = events.filter((e) => e.name === "BatchTransactionExecuted");
+
+      expect(executed.args.executor).to.equal(owner0.address);
+      expect(executed.args.count).to.equal(2n);
+      expect(members.length).to.equal(2);
+      [idxA, idxB].forEach((txIndex, i) => {
+        expect(members[i].args.batchId).to.equal(executed.args.batchId);
+        expect(members[i].args.txIndex).to.equal(txIndex);
+        expect(members[i].args.position).to.equal(BigInt(i));
+        expect(members[i].args.value).to.equal(value);
+      });
+
+      // The per-transaction audit trail is preserved alongside the batch events.
+      expect(events.filter((e) => e.name === "ExecuteTransaction").length).to.equal(2);
+
+      expect((await treasury.getTransaction(idxA)).executed).to.equal(true);
+      expect((await treasury.getTransaction(idxB)).executed).to.equal(true);
+      expect(await treasury.daySpent()).to.equal(value * 2n);
+      expect(await treasury.weekSpent()).to.equal(value * 2n);
+    });
+
+    it("assigns a distinct correlation id to each batch", async () => {
+      const value = ethers.parseEther("0.1");
+      const ids = [];
+      for (let i = 0; i < 2; i++) {
+        const idx = await submitTx(owner0, recipient.address, value);
+        await confirmBy(idx, owner0);
+        const receipt = await (await treasury.connect(owner0).executeBatch([idx])).wait();
+        ids.push(parseLogs(receipt).find((e) => e.name === "BatchExecuted").args.batchId);
+      }
+      expect(ids[0]).to.not.equal(ids[1]);
+      expect(await treasury.batchNonce()).to.equal(2n);
+    });
+
+    it("rolls the whole batch back when a member's external call fails", async () => {
+      const Rejecting = await ethers.getContractFactory("RejectingReceiver");
+      const rejecting = await Rejecting.deploy();
+      await rejecting.waitForDeployment();
+
+      const value = ethers.parseEther("0.5");
+      const okIdx = await submitTx(owner0, recipient.address, value);
+      const badIdx = await submitTx(owner0, await rejecting.getAddress(), value);
+      await confirmBy(okIdx, owner0);
+      await confirmBy(badIdx, owner0);
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      await expect(treasury.connect(owner0).executeBatch([okIdx, badIdx])).to.be.revertedWith(
+        "tx failed"
+      );
+      const after = await ethers.provider.getBalance(recipient.address);
+
+      // Nothing from the batch survived: no transfer, no executed flag, no spend.
+      expect(after - before).to.equal(0n);
+      expect((await treasury.getTransaction(okIdx)).executed).to.equal(false);
+      expect((await treasury.getTransaction(badIdx)).executed).to.equal(false);
+      expect(await treasury.daySpent()).to.equal(0n);
+    });
+
+    it("rolls the whole batch back when a member is not sufficiently confirmed", async () => {
+      const value = ethers.parseEther("0.5");
+      const okIdx = await submitTx(owner0, recipient.address, value);
+      const unconfirmedIdx = await submitTx(owner0, recipient.address, value);
+      await confirmBy(okIdx, owner0);
+
+      await expect(
+        treasury.connect(owner0).executeBatch([okIdx, unconfirmedIdx])
+      ).to.be.revertedWith("requires at least one confirmation");
+      expect((await treasury.getTransaction(okIdx)).executed).to.equal(false);
+      expect(await treasury.daySpent()).to.equal(0n);
+    });
+
+    it("rolls the whole batch back when a member's timelock has not elapsed", async () => {
+      const smallIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(smallIdx, owner0);
+      const largeIdx = await submitTx(owner0, recipient.address, ethers.parseEther("3"));
+      await confirmBy(largeIdx, owner0, owner1);
+
+      await expect(treasury.connect(owner0).executeBatch([smallIdx, largeIdx])).to.be.revertedWith(
+        "timelock not elapsed"
+      );
+      expect((await treasury.getTransaction(smallIdx)).executed).to.equal(false);
+
+      // Once the timelock elapses the same batch succeeds as a unit.
+      await advanceTime(TWO_DAYS);
+      const before = await ethers.provider.getBalance(recipient.address);
+      await treasury.connect(owner0).executeBatch([smallIdx, largeIdx]);
+      const after = await ethers.provider.getBalance(recipient.address);
+      expect(after - before).to.equal(ethers.parseEther("3.5"));
+    });
+
+    it("rolls the whole batch back on a duplicated index", async () => {
+      const idx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(idx, owner0);
+
+      await expect(treasury.connect(owner0).executeBatch([idx, idx])).to.be.revertedWith(
+        "already executed"
+      );
+      expect((await treasury.getTransaction(idx)).executed).to.equal(false);
+      expect(await treasury.daySpent()).to.equal(0n);
+    });
+
+    it("rolls the whole batch back when members collectively exceed the daily limit", async () => {
+      // dailyLimit is 5 ETH; each member is at the 2 ETH threshold so it needs a
+      // single confirmation, but the three together breach the window.
+      const value = ethers.parseEther("2");
+      const indexes = [];
+      for (let i = 0; i < 3; i++) {
+        const idx = await submitTx(owner0, recipient.address, value);
+        await confirmBy(idx, owner0);
+        indexes.push(idx);
+      }
+
+      await expect(treasury.connect(owner0).executeBatch(indexes)).to.be.revertedWith(
+        "exceeds daily limit"
+      );
+      for (const idx of indexes) {
+        expect((await treasury.getTransaction(idx)).executed).to.equal(false);
+      }
+      expect(await treasury.daySpent()).to.equal(0n);
+      expect(await ethers.provider.getBalance(await treasury.getAddress())).to.equal(
+        ethers.parseEther("5")
+      );
+
+      // The first two members alone fit inside the window.
+      await treasury.connect(owner0).executeBatch(indexes.slice(0, 2));
+      expect(await treasury.daySpent()).to.equal(ethers.parseEther("4"));
+    });
+
+    it("bounds the batch size and keeps a full-size batch inside the block gas limit", async () => {
+      treasury = await deployTreasury({
+        dailyLimit: ethers.parseEther("100"),
+        weeklyLimit: ethers.parseEther("200"),
+      });
+      await owner0.sendTransaction({
+        to: await treasury.getAddress(),
+        value: ethers.parseEther("10"),
+      });
+
+      const maxBatchSize = Number(await treasury.MAX_BATCH_SIZE());
+      const indexes = [];
+      for (let i = 0; i < maxBatchSize; i++) {
+        const idx = await submitTx(owner0, recipient.address, ethers.parseEther("0.1"));
+        await confirmBy(idx, owner0);
+        indexes.push(idx);
+      }
+
+      await expect(treasury.connect(owner0).executeBatch([])).to.be.revertedWith("empty batch");
+      await expect(
+        treasury.connect(owner0).executeBatch([...indexes, indexes[0]])
+      ).to.be.revertedWith("batch too large");
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      const receipt = await (await treasury.connect(owner0).executeBatch(indexes)).wait();
+      const after = await ethers.provider.getBalance(recipient.address);
+      expect(after - before).to.equal(ethers.parseEther("0.1") * BigInt(maxBatchSize));
+
+      // A full batch stays well inside a mainnet block (30M gas), so a capped
+      // batch can never become unexecutable.
+      // A full 20-transfer batch costs ~1.15M gas, so a size-capped batch can
+      // never grow past a block gas limit and become unexecutable.
+      expect(receipt.gasUsed).to.be.lt(2_000_000n);
+    });
+
+    it("blocks reentrant batch execution", async () => {
+      const Attacker = await ethers.getContractFactory("BatchReentrancyAttacker");
+      const attacker = await Attacker.deploy();
+      await attacker.waitForDeployment();
+
+      const attackIdx = await submitTx(owner0, await attacker.getAddress(), 0n, "0x");
+      await confirmBy(attackIdx, owner0);
+
+      const value = ethers.parseEther("1");
+      const targetIdx = await submitTx(owner0, recipient.address, value);
+      await confirmBy(targetIdx, owner0);
+
+      await attacker.arm(await treasury.getAddress(), [targetIdx]);
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      await treasury.connect(owner0).executeBatch([attackIdx]);
+      const after = await ethers.provider.getBalance(recipient.address);
+
+      expect(await attacker.reentered()).to.equal(true);
+      expect(await attacker.reentrantCallSucceeded()).to.equal(false);
+      expect(after - before).to.equal(0n);
+      expect((await treasury.getTransaction(targetIdx)).executed).to.equal(false);
+    });
+
+    it("blocks a reentrant single execution launched from inside a batch", async () => {
+      const Attacker = await ethers.getContractFactory("ReentrancyAttacker");
+      const attacker = await Attacker.deploy();
+      await attacker.waitForDeployment();
+
+      const attackIdx = await submitTx(owner0, await attacker.getAddress(), 0n, "0x");
+      await confirmBy(attackIdx, owner0);
+
+      const targetIdx = await submitTx(owner0, recipient.address, ethers.parseEther("1"));
+      await confirmBy(targetIdx, owner0);
+
+      await attacker.arm(await treasury.getAddress(), Number(targetIdx));
+      await treasury.connect(owner0).executeBatch([attackIdx]);
+
+      expect(await attacker.reentered()).to.equal(true);
+      expect(await attacker.reentrantCallSucceeded()).to.equal(false);
+      expect((await treasury.getTransaction(targetIdx)).executed).to.equal(false);
+    });
+
+    it("applies correlated governance changes atomically after the timelock", async () => {
+      const treasuryAddress = await treasury.getAddress();
+      const limitsData = treasury.interface.encodeFunctionData("updateLimits", [
+        ethers.parseEther("4"),
+        ethers.parseEther("9"),
+        ethers.parseEther("1"),
+      ]);
+      const timelockData = treasury.interface.encodeFunctionData("updateTimelock", [THREE_DAYS]);
+
+      const { indexes } = await submitBatchTx(
+        owner0,
+        [treasuryAddress, treasuryAddress],
+        [0n, 0n],
+        [limitsData, timelockData]
+      );
+      for (const idx of indexes) {
+        await confirmBy(idx, owner0, owner1, owner2);
+      }
+
+      await expect(treasury.connect(owner0).executeBatch(indexes)).to.be.revertedWith(
+        "timelock not elapsed"
+      );
+      expect(await treasury.dailyLimit()).to.equal(ethers.parseEther("5"));
+
+      await advanceTime(TWO_DAYS);
+      await treasury.connect(owner0).executeBatch(indexes);
+      expect(await treasury.dailyLimit()).to.equal(ethers.parseEther("4"));
+      expect(await treasury.weeklyLimit()).to.equal(ethers.parseEther("9"));
+      expect(await treasury.threshold()).to.equal(ethers.parseEther("1"));
+      expect(await treasury.timelockDelay()).to.equal(THREE_DAYS);
+    });
+  });
+
+  describe("emergency pause", function () {
+    async function proposePause(...confirmers) {
+      const data = treasury.interface.encodeFunctionData("pause");
+      const idx = await submitTx(owner0, await treasury.getAddress(), 0n, data);
+      await confirmBy(idx, ...confirmers);
+      return idx;
+    }
+
+    async function pauseTreasury() {
+      const idx = await proposePause(owner0, owner1);
+      const tx = await treasury.connect(owner0).executeTransaction(idx);
+      return { idx, tx };
+    }
+
+    async function proposeWithdrawal(to, amount, ...confirmers) {
+      const data = treasury.interface.encodeFunctionData("emergencyWithdraw", [to, amount]);
+      const idx = await submitTx(owner0, await treasury.getAddress(), 0n, data);
+      await confirmBy(idx, ...confirmers);
+      return idx;
+    }
+
+    it("pauses with the base threshold and no timelock, and is auditable", async () => {
+      await expect(treasury.connect(owner0).pause()).to.be.revertedWith("only self");
+
+      const treasuryAddress = await treasury.getAddress();
+      const { idx, tx } = await pauseTreasury();
+
+      // The pause event records the state change; the paired ExecuteTransaction
+      // event in the same transaction identifies the acting owner.
+      await expect(tx).to.emit(treasury, "Paused").withArgs(treasuryAddress);
+      await expect(tx).to.emit(treasury, "ExecuteTransaction").withArgs(owner0.address, idx);
+      expect(await treasury.paused()).to.equal(true);
+      expect(await treasury.frozen()).to.equal(false);
+    });
+
+    it("rejects a pause below the base threshold", async () => {
+      const idx = await proposePause(owner0);
+      await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith(
+        "insufficient confirmations for pause action"
+      );
+      expect(await treasury.paused()).to.equal(false);
+    });
+
+    it("prevents new operations while paused", async () => {
+      const treasuryAddress = await treasury.getAddress();
+      const approvedIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(approvedIdx, owner0);
+      const pendingIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+
+      await pauseTreasury();
+
+      await expect(submitTx(owner0, recipient.address, ethers.parseEther("0.1"))).to.be.revertedWith(
+        "paused"
+      );
+      await expect(treasury.connect(owner1).confirmTransaction(pendingIdx)).to.be.revertedWith(
+        "paused"
+      );
+      await expect(treasury.connect(owner0).executeTransaction(approvedIdx)).to.be.revertedWith(
+        "paused"
+      );
+      await expect(treasury.connect(owner0).executeBatch([approvedIdx])).to.be.revertedWith(
+        "paused"
+      );
+
+      // A pause is not itself pause-exempt, so it cannot be re-proposed.
+      const pauseData = treasury.interface.encodeFunctionData("pause");
+      await expect(submitTx(owner0, treasuryAddress, 0n, pauseData)).to.be.revertedWith("paused");
+      // Nor are ordinary governance changes.
+      const limitsData = treasury.interface.encodeFunctionData("updateLimits", [0n, 0n, 0n]);
+      await expect(submitTx(owner0, treasuryAddress, 0n, limitsData)).to.be.revertedWith("paused");
+    });
+
+    it("still accepts deposits and confirmation revocations while paused", async () => {
+      const idx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(idx, owner0);
+      await pauseTreasury();
+
+      const treasuryAddress = await treasury.getAddress();
+      await owner0.sendTransaction({ to: treasuryAddress, value: ethers.parseEther("1") });
+      expect(await ethers.provider.getBalance(treasuryAddress)).to.equal(ethers.parseEther("6"));
+
+      await treasury.connect(owner0).revokeConfirmation(idx);
+      expect((await treasury.getTransaction(idx)).numConfirmations).to.equal(0n);
+    });
+
+    it("allows emergency withdrawals while paused, bypassing the spending windows", async () => {
+      await pauseTreasury();
+
+      // dailyLimit is 5 ETH and 2 ETH of it is untouched, yet the withdrawal is
+      // not charged against the window at all.
+      const amount = ethers.parseEther("2");
+      const idx = await proposeWithdrawal(recipient.address, amount, owner0, owner1, owner2);
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      const tx = await treasury.connect(owner0).executeTransaction(idx);
+      const after = await ethers.provider.getBalance(recipient.address);
+
+      expect(after - before).to.equal(amount);
+      await expect(tx)
+        .to.emit(treasury, "EmergencyWithdrawal")
+        .withArgs(recipient.address, amount, ethers.parseEther("3"));
+      await expect(tx).to.emit(treasury, "ExecuteTransaction").withArgs(owner0.address, idx);
+      expect(await treasury.daySpent()).to.equal(0n);
+      expect(await treasury.weekSpent()).to.equal(0n);
+      expect(await treasury.paused()).to.equal(true);
+    });
+
+    it("requires unanimous approval for an emergency withdrawal", async () => {
+      await pauseTreasury();
+      const idx = await proposeWithdrawal(recipient.address, ethers.parseEther("1"), owner0, owner1);
+      await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith(
+        "insufficient confirmations for emergency action"
+      );
+    });
+
+    it("rejects emergency withdrawals when the treasury is not paused", async () => {
+      await expect(
+        treasury.connect(owner0).emergencyWithdraw(recipient.address, ethers.parseEther("1"))
+      ).to.be.revertedWith("only self");
+
+      const idx = await proposeWithdrawal(
+        recipient.address,
+        ethers.parseEther("1"),
+        owner0,
+        owner1,
+        owner2
+      );
+      await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith("tx failed");
+      expect(await ethers.provider.getBalance(await treasury.getAddress())).to.equal(
+        ethers.parseEther("5")
+      );
+    });
+
+    it("validates emergency withdrawal arguments", async () => {
+      await pauseTreasury();
+      const cases = [
+        [ethers.ZeroAddress, ethers.parseEther("1")],
+        [recipient.address, 0n],
+        [recipient.address, ethers.parseEther("6")], // more than the balance
+      ];
+      for (const [to, amount] of cases) {
+        const idx = await proposeWithdrawal(to, amount, owner0, owner1, owner2);
+        await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith(
+          "tx failed"
+        );
+      }
+      expect(await ethers.provider.getBalance(await treasury.getAddress())).to.equal(
+        ethers.parseEther("5")
+      );
+    });
+
+    it("batches emergency withdrawals while paused", async () => {
+      await pauseTreasury();
+      const treasuryAddress = await treasury.getAddress();
+      const first = ethers.parseEther("1");
+      const second = ethers.parseEther("2");
+
+      const { indexes } = await submitBatchTx(
+        owner0,
+        [treasuryAddress, treasuryAddress],
+        [0n, 0n],
+        [
+          treasury.interface.encodeFunctionData("emergencyWithdraw", [recipient.address, first]),
+          treasury.interface.encodeFunctionData("emergencyWithdraw", [owner2.address, second]),
+        ]
+      );
+      for (const idx of indexes) {
+        await confirmBy(idx, owner0, owner1, owner2);
+      }
+
+      const before = await ethers.provider.getBalance(recipient.address);
+      const receipt = await (await treasury.connect(owner0).executeBatch(indexes)).wait();
+      const after = await ethers.provider.getBalance(recipient.address);
+
+      expect(after - before).to.equal(first);
+      expect(await ethers.provider.getBalance(treasuryAddress)).to.equal(ethers.parseEther("2"));
+
+      const events = parseLogs(receipt);
+      const batchId = events.find((e) => e.name === "BatchExecuted").args.batchId;
+      const members = events.filter((e) => e.name === "BatchTransactionExecuted");
+      expect(members.length).to.equal(2);
+      expect(members.every((e) => e.args.batchId === batchId)).to.equal(true);
+      expect(events.filter((e) => e.name === "EmergencyWithdrawal").length).to.equal(2);
+    });
+
+    it("rejects a batch containing a non-exempt operation while paused", async () => {
+      const treasuryAddress = await treasury.getAddress();
+      const paymentIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(paymentIdx, owner0);
+
+      await pauseTreasury();
+
+      const withdrawIdx = await proposeWithdrawal(
+        recipient.address,
+        ethers.parseEther("1"),
+        owner0,
+        owner1,
+        owner2
+      );
+
+      await expect(
+        treasury.connect(owner0).executeBatch([withdrawIdx, paymentIdx])
+      ).to.be.revertedWith("paused");
+      expect(await ethers.provider.getBalance(treasuryAddress)).to.equal(ethers.parseEther("5"));
+      expect((await treasury.getTransaction(withdrawIdx)).executed).to.equal(false);
+    });
+
+    it("unpauses with the sensitive threshold and no timelock, restoring operations", async () => {
+      const treasuryAddress = await treasury.getAddress();
+      const paymentIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.5"));
+      await confirmBy(paymentIdx, owner0);
+
+      await pauseTreasury();
+
+      const data = treasury.interface.encodeFunctionData("unpause");
+      const idx = await submitTx(owner0, treasuryAddress, 0n, data);
+      await confirmBy(idx, owner0, owner1);
+      // Unpausing restores capability, so it needs sensitiveRequired (3), not required (2).
+      await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith(
+        "insufficient confirmations for sensitive action"
+      );
+
+      await confirmBy(idx, owner2);
+      // No time is advanced: unpause is deliberately exempt from the timelock.
+      const tx = await treasury.connect(owner0).executeTransaction(idx);
+      await expect(tx).to.emit(treasury, "Unpaused").withArgs(treasuryAddress);
+      await expect(tx).to.emit(treasury, "ExecuteTransaction").withArgs(owner0.address, idx);
+      expect(await treasury.paused()).to.equal(false);
+
+      // Operations queued before the pause resume, and new ones are accepted.
+      const before = await ethers.provider.getBalance(recipient.address);
+      await treasury.connect(owner0).executeTransaction(paymentIdx);
+      const after = await ethers.provider.getBalance(recipient.address);
+      expect(after - before).to.equal(ethers.parseEther("0.5"));
+
+      const newIdx = await submitTx(owner0, recipient.address, ethers.parseEther("0.1"));
+      await confirmBy(newIdx, owner0);
+      await treasury.connect(owner0).executeTransaction(newIdx);
+      expect((await treasury.getTransaction(newIdx)).executed).to.equal(true);
+    });
+
+    it("rejects an unpause when the treasury is not paused", async () => {
+      const data = treasury.interface.encodeFunctionData("unpause");
+      const idx = await submitTx(owner0, await treasury.getAddress(), 0n, data);
+      await confirmBy(idx, owner0, owner1, owner2);
+      await expect(treasury.connect(owner0).executeTransaction(idx)).to.be.revertedWith("tx failed");
+      expect(await treasury.paused()).to.equal(false);
+    });
+
+    it("keeps pause and freeze independent, with freeze taking precedence", async () => {
+      await pauseTreasury();
+
+      // Escalating from paused to frozen stays possible.
+      const freezeData = treasury.interface.encodeFunctionData("emergencyFreeze");
+      const freezeIdx = await submitTx(owner0, await treasury.getAddress(), 0n, freezeData);
+      await confirmBy(freezeIdx, owner0, owner1, owner2);
+      await treasury.connect(owner0).executeTransaction(freezeIdx);
+      expect(await treasury.frozen()).to.equal(true);
+      expect(await treasury.paused()).to.equal(true);
+
+      // A freeze closes even the emergency withdrawal hatch.
+      const withdrawData = treasury.interface.encodeFunctionData("emergencyWithdraw", [
+        recipient.address,
+        ethers.parseEther("1"),
+      ]);
+      const withdrawIdx = await submitTx(owner0, await treasury.getAddress(), 0n, withdrawData);
+      await expect(treasury.connect(owner0).confirmTransaction(withdrawIdx)).to.be.revertedWith(
+        "frozen"
+      );
+    });
   });
 });
