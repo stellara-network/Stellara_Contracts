@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  Min,
+} from 'class-validator';
 
 export class AiRequestDto {
   @IsString()
@@ -8,4 +14,13 @@ export class AiRequestDto {
   @IsString()
   @IsOptional()
   userId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  estimatedTokens?: number;
+
+  @IsString()
+  @IsOptional()
+  model?: string;
 }

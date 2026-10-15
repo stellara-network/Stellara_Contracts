@@ -17,11 +17,11 @@ import { RedisModule } from '../redis/redis.module';
     AiCacheService,
     QuotaService,
     OpenAiProvider,
-    { provide: AI_PROVIDER, useClass: OpenAiProvider },
+    { provide: AI_PROVIDER, useExisting: OpenAiProvider },
     FallbackProvider,
-    { provide: AI_FALLBACK_PROVIDER, useClass: FallbackProvider },
+    { provide: AI_FALLBACK_PROVIDER, useExisting: FallbackProvider },
     { provide: 'REDIS_CLIENT', useValue: null },
   ],
-  exports: [AiService],
+  exports: [AiService, AiCacheService, QuotaService],
 })
 export class AiModule {}
